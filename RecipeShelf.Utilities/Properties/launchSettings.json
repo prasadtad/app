@@ -1,0 +1,18 @@
+{
+  "profiles": {
+    "RecipeShelf.Utilities": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "CacheEndpoint": "localhost:6379",
+        "MarkdownFolder": "C:\\Src\\site\\site\\content\\recipe",
+        "MarkdownRoot": "C:\\Src\\site",
+        "S3FileProxyBucket": "recipeshelf",
+        "LocalFileProxyFolder": "C:\\Users\\prasad\\Dropbox\\recipeshelf\\Data",
+        "UseLocalDynamoDB": "True",
+        "FileProxyType": "Local",
+        "LogLevel": "Debug",
+        "CommitAndPush": "True"
+      }
+    }
+  }
+}

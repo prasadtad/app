@@ -1,0 +1,21 @@
+{
+  "version": "1.0.0-*",
+  "dependencies": {
+    "Newtonsoft.Json": "9.0.1",
+    "System.ComponentModel": "4.3.0",
+    "Microsoft.NETCore.App": {
+      "version": "1.0.0",
+      "type": "platform"
+    },
+    "Microsoft.Extensions.DependencyInjection.Abstractions": "1.1.0",
+    "AWSSDK.S3": "3.3.5.3"
+  },
+  "frameworks": {
+    "netcoreapp1.0": {
+      "imports": "dnxcore50"
+    }
+  },
+  "buildOptions": {
+    "define": []
+  }
+}

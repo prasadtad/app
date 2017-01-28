@@ -1,0 +1,16 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+.suo
+bin
+obj
+images
+stock-images
+favicons
+/RecipeShelf.Cache/project.lock.json
+/RecipeShelf.Chat/project.lock.json
+/RecipeShelf.Common/project.lock.json
+/RecipeShelf.Lambda/project.lock.json
+/RecipeShelf.Site/project.lock.json
+/RecipeShelf.Utilities/project.lock.json
