@@ -37,7 +37,7 @@ namespace RecipeShelf.NoSql
             var doc = new Document();
             if (recipe.AccompanimentIds != null && recipe.AccompanimentIds.Length > 0)
                 doc["accompanimentIds"] = recipe.AccompanimentIds.ToStrings();
-            doc["approved"] = recipe.Approved;
+            doc["approved"] = new DynamoDBBool(recipe.Approved);
             doc["chefId"] = recipe.ChefId;
             if (recipe.Collections != null && recipe.Collections.Length > 0)
                 doc["collections"] = recipe.Collections;
@@ -54,7 +54,7 @@ namespace RecipeShelf.NoSql
                 doc["ingredients"] = ToDynamoDBList(recipe.Ingredients);
             doc["lastModified"] = recipe.LastModified;
             doc["names"] = recipe.Names;
-            doc["overnightPreparation"] = recipe.OvernightPreparation;
+            doc["overnightPreparation"] = new DynamoDBBool(recipe.OvernightPreparation);
             if (!string.IsNullOrEmpty(recipe.Region))
                 doc["region"] = recipe.Region;
             if (!string.IsNullOrEmpty(recipe.Servings))
@@ -86,7 +86,7 @@ namespace RecipeShelf.NoSql
             doc["id"] = ingredient.Id.Value;
             doc["lastModified"] = ingredient.LastModified;
             doc["names"] = ingredient.Names;
-            doc["vegan"] = ingredient.Vegan;
+            doc["vegan"] = new DynamoDBBool(ingredient.Vegan);
 
             var ingredientBatch = ingredientTable.CreateBatchWrite();
             ingredientBatch.AddDocumentToPut(doc);

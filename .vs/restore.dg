@@ -1,0 +1,13 @@
+#:C:\Src\app\RecipeShelf.Utilities\RecipeShelf.Utilities.xproj
+C:\Src\app\RecipeShelf.Utilities\RecipeShelf.Utilities.xproj|C:\Src\app\RecipeShelf.Cache\RecipeShelf.Cache.xproj
+C:\Src\app\RecipeShelf.Utilities\RecipeShelf.Utilities.xproj|C:\Src\app\RecipeShelf.Common\RecipeShelf.Common.xproj
+C:\Src\app\RecipeShelf.Utilities\RecipeShelf.Utilities.xproj|C:\Src\app\RecipeShelf.Lambda\RecipeShelf.Lambda.xproj
+C:\Src\app\RecipeShelf.Utilities\RecipeShelf.Utilities.xproj|C:\Src\app\RecipeShelf.Site\RecipeShelf.Site.xproj
+C:\Src\app\RecipeShelf.Utilities\RecipeShelf.Utilities.xproj|C:\Src\app\RecipeShelf.VPCLambda\RecipeShelf.VPCLambda.xproj
+C:\Src\app\RecipeShelf.Cache\RecipeShelf.Cache.xproj|C:\Src\app\RecipeShelf.Common\RecipeShelf.Common.xproj
+C:\Src\app\RecipeShelf.Lambda\RecipeShelf.Lambda.xproj|C:\Src\app\RecipeShelf.Common\RecipeShelf.Common.xproj
+C:\Src\app\RecipeShelf.Lambda\RecipeShelf.Lambda.xproj|C:\Src\app\RecipeShelf.NoSql\RecipeShelf.NoSql.xproj
+C:\Src\app\RecipeShelf.NoSql\RecipeShelf.NoSql.xproj|C:\Src\app\RecipeShelf.Common\RecipeShelf.Common.xproj
+C:\Src\app\RecipeShelf.Site\RecipeShelf.Site.xproj|C:\Src\app\RecipeShelf.Common\RecipeShelf.Common.xproj
+C:\Src\app\RecipeShelf.VPCLambda\RecipeShelf.VPCLambda.xproj|C:\Src\app\RecipeShelf.Cache\RecipeShelf.Cache.xproj
+C:\Src\app\RecipeShelf.VPCLambda\RecipeShelf.VPCLambda.xproj|C:\Src\app\RecipeShelf.Common\RecipeShelf.Common.xproj

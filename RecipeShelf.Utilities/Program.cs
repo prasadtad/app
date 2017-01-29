@@ -34,10 +34,13 @@ namespace RecipeShelf.Utilities
 
         private static async Task MainAsync(string[] args)
         {
-            var markdownProxy = _serviceProvider.GetService<IMarkdownProxy>();
             var fileProxy = _serviceProvider.GetService<IFileProxy>();
-            foreach (var key in await fileProxy.ListKeysAsync("recipes"))
-                await markdownProxy.PutRecipeAsync(JsonConvert.DeserializeObject<Recipe>(await fileProxy.GetTextAsync(key)));
+            var markdownProxy = _serviceProvider.GetService<IMarkdownProxy>();
+            var noSqlProxy = _serviceProvider.GetService<INoSqlDbProxy>();
+            var ingredientCache = _serviceProvider.GetService<IngredientCache>();
+            var recipeCache = _serviceProvider.GetService<RecipeCache>();            
         }
+
+        
     }
 }

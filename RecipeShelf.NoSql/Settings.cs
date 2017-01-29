@@ -2,6 +2,6 @@
 {
     public static class Settings
     {
-        public static bool UseLocalDynamoDB = Common.Settings.GetEnumValue<bool>("UseLocalDynamoDB");
+        public static bool UseLocalDynamoDB = Common.Settings.GetValue<bool>("UseLocalDynamoDB");
     }
 }
