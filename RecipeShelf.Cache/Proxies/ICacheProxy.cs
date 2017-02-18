@@ -38,9 +38,11 @@ namespace RecipeShelf.Cache.Proxies
 
         long Count(string setKey);
 
-        string Get(string setKey, Id id);
+        string Get(string setKey, string hashField);
 
-        bool GetFlag(string setKey, Id id);
+        bool GetFlag(string setKey, string hashField);
+
+        List<HashEntry> HashScan(string setKey, string hashFieldPattern);
 
         Id[] Ids(string setKey);
 

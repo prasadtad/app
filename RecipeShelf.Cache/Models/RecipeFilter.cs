@@ -4,7 +4,7 @@ using RecipeShelf.Common.Models;
 
 namespace RecipeShelf.Cache.Models
 {
-    public class RecipeFilter
+    public sealed class RecipeFilter
     {
         [JsonProperty("collections", NullValueHandling = NullValueHandling.Ignore)]
         public string[] Collections { get; set; }

@@ -143,6 +143,30 @@
           "lib/netstandard1.3/AWSSDK.S3.dll": {}
         }
       },
+      "AWSSDK.SQS/3.3.1.7": {
+        "type": "package",
+        "dependencies": {
+          "AWSSDK.Core": "[3.3.8, 3.4.0)"
+        },
+        "compile": {
+          "lib/netstandard1.3/AWSSDK.SQS.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard1.3/AWSSDK.SQS.dll": {}
+        }
+      },
+      "Fastenshtein/1.0.0.4": {
+        "type": "package",
+        "dependencies": {
+          "System.Runtime": "4.1.0"
+        },
+        "compile": {
+          "lib/netstandard1.0/Fastenshtein.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard1.0/Fastenshtein.dll": {}
+        }
+      },
       "Libuv/1.9.0": {
         "type": "package",
         "dependencies": {
@@ -2515,6 +2539,7 @@
         "type": "project",
         "framework": ".NETCoreApp,Version=v1.0",
         "dependencies": {
+          "Fastenshtein": "1.0.0.4",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "1.1.0",
           "Microsoft.NETCore.App": "1.0.0",
           "Newtonsoft.Json": "9.0.1",
@@ -2533,6 +2558,7 @@
         "framework": ".NETCoreApp,Version=v1.0",
         "dependencies": {
           "AWSSDK.S3": "3.3.5.3",
+          "AWSSDK.SQS": "3.3.1.7",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "1.1.0",
           "Microsoft.NETCore.App": "1.0.0",
           "Newtonsoft.Json": "9.0.1",
@@ -2805,6 +2831,52 @@
         "lib/portable-net45+win8+wpa81+wp8/AWSSDK.S3.pdb",
         "tools/install.ps1",
         "tools/uninstall.ps1"
+      ]
+    },
+    "AWSSDK.SQS/3.3.1.7": {
+      "sha512": "4ZVR/iP3dou7Pvb2I1Al15nqRZiS8MqrNzbwWUDyMcw+93oWPYjWlvmF9aMAMZybIjFk3YLNZNGsdvjii2XlZQ==",
+      "type": "package",
+      "path": "AWSSDK.SQS/3.3.1.7",
+      "files": [
+        "AWSSDK.SQS.3.3.1.7.nupkg.sha512",
+        "AWSSDK.SQS.nuspec",
+        "analyzers/dotnet/cs/AWSSDK.SQS.CodeAnalysis.dll",
+        "lib/MonoAndroid10/AWSSDK.SQS.XML",
+        "lib/MonoAndroid10/AWSSDK.SQS.dll",
+        "lib/MonoTouch10/AWSSDK.SQS.XML",
+        "lib/MonoTouch10/AWSSDK.SQS.dll",
+        "lib/MonoTouch10/AWSSDK.SQS.pdb",
+        "lib/Xamarin.iOS10/AWSSDK.SQS.XML",
+        "lib/Xamarin.iOS10/AWSSDK.SQS.dll",
+        "lib/net35/AWSSDK.SQS.XML",
+        "lib/net35/AWSSDK.SQS.dll",
+        "lib/net35/AWSSDK.SQS.pdb",
+        "lib/net45/AWSSDK.SQS.XML",
+        "lib/net45/AWSSDK.SQS.dll",
+        "lib/net45/AWSSDK.SQS.pdb",
+        "lib/netstandard1.3/AWSSDK.SQS.dll",
+        "lib/netstandard1.3/AWSSDK.SQS.pdb",
+        "lib/netstandard1.3/AWSSDK.SQS.xml",
+        "lib/portable-net45+win8+wpa81+wp8/AWSSDK.SQS.XML",
+        "lib/portable-net45+win8+wpa81+wp8/AWSSDK.SQS.dll",
+        "lib/portable-net45+win8+wpa81+wp8/AWSSDK.SQS.pdb",
+        "tools/install.ps1",
+        "tools/uninstall.ps1"
+      ]
+    },
+    "Fastenshtein/1.0.0.4": {
+      "sha512": "U3gc+5P/OlZCC5VUZJhbCIX33iIVd91rp7vB9zjshsvIUuMO0wiTz78zm+soeinrFUzlfsbrmGC9Q5bSG8NNMg==",
+      "type": "package",
+      "path": "Fastenshtein/1.0.0.4",
+      "files": [
+        "Fastenshtein.1.0.0.4.nupkg.sha512",
+        "Fastenshtein.nuspec",
+        "lib/net40-client/Fastenshtein.dll",
+        "lib/net40-client/Fastenshtein.xml",
+        "lib/netstandard1.0/Fastenshtein.dll",
+        "lib/netstandard1.0/Fastenshtein.xml",
+        "lib/portable-net40+sl5+win8+wpa+wp8/Fastenshtein.dll",
+        "lib/portable-net40+sl5+win8+wpa+wp8/Fastenshtein.xml"
       ]
     },
     "Libuv/1.9.0": {

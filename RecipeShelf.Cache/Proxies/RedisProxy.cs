@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace RecipeShelf.Cache.Proxies
 {
-    public class RedisProxy : ICacheProxy
+    public sealed class RedisProxy : ICacheProxy
     {
         private readonly ConnectionMultiplexer _redis;
         private readonly Logger<RedisProxy> _logger = new Logger<RedisProxy>();
@@ -24,20 +24,36 @@ namespace RecipeShelf.Cache.Proxies
             return db.SetLength(setKey);
         }
 
-        public string Get(string setKey, Id id)
+        public string Get(string setKey, string hashField)
         {
-            _logger.Debug("Get", $"Getting {id.Value} value from {setKey}");
-            var value = _redis.GetDatabase().HashGet(setKey, id.Value);
+            _logger.Debug("Get", $"Getting {hashField} value from {setKey}");
+            var value = _redis.GetDatabase().HashGet(setKey, hashField);
             if (value.IsNullOrEmpty) return string.Empty;
             return value;
         }
 
-        public bool GetFlag(string setKey, Id id)
+        public bool GetFlag(string setKey, string hashField)
         {
-            _logger.Debug("GetFlag", $"Getting {id.Value} flag from {setKey}");
-            var value = _redis.GetDatabase().HashGet(setKey, id.Value);
+            _logger.Debug("GetFlag", $"Getting {hashField} flag from {setKey}");
+            var value = _redis.GetDatabase().HashGet(setKey, hashField);
             if (value.IsNullOrEmpty) return false;
             return value == Constants.TRUE;
+        }
+
+        public List<Models.HashEntry> HashScan(string setKey, string hashFieldPattern)
+        {
+            _logger.Debug("HashScan", $"Getting {setKey} entries matching {hashFieldPattern}");
+            var entries = new List<Models.HashEntry>();
+            var db = _redis.GetDatabase();
+            IScanningCursor cursor = null;
+            while (cursor == null || cursor.Cursor > 0)
+            {
+                var results = db.HashScan(setKey, hashFieldPattern, 10);
+                foreach (var entry in results)
+                    entries.Add(new Models.HashEntry(setKey, entry.Name, entry.Value));
+                cursor = (IScanningCursor)results;
+            }
+            return entries;
         }
 
         public Id[] Ids(string setKey)
@@ -125,9 +141,9 @@ namespace RecipeShelf.Cache.Proxies
                 {
                     var hashEntry = (Models.HashEntry)entry;
                     if (string.IsNullOrEmpty(hashEntry.Value))
-                        transaction.HashDeleteAsync(hashEntry.SetKey, hashEntry.Id.Value);
+                        transaction.HashDeleteAsync(hashEntry.SetKey, hashEntry.HashField);
                     else
-                        transaction.HashSetAsync(hashEntry.SetKey, hashEntry.Id.Value, hashEntry.Value);
+                        transaction.HashSetAsync(hashEntry.SetKey, hashEntry.HashField, hashEntry.Value);
                     count++;
                 }
             }

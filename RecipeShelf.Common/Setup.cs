@@ -7,6 +7,7 @@ namespace RecipeShelf.Common
     {
         public static IServiceCollection AddCommon(this IServiceCollection services)
         {
+            services = services.AddSingleton<IDistributedQueueProxy, SQSQueueProxy>();
             return Settings.FileProxyType == FileProxyTypes.Local ? services.AddSingleton<IFileProxy, LocalFileProxy>() : 
                                                                     services.AddSingleton<IFileProxy, S3FileProxy>();
         }

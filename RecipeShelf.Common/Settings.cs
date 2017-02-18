@@ -13,6 +13,10 @@ namespace RecipeShelf.Common
 
         public static string S3FileProxyBucket = GetValue<string>("S3FileProxyBucket");
 
+        public static bool UseLocalQueue = GetValue<bool>("UseLocalQueue");
+
+        public static string SQSUrlPrefix = GetValue<string>("SQSUrlPrefix");
+
         public static T GetEnumValue<T>(string variable) where T : struct, IConvertible
         {
             return (T)Enum.Parse(typeof(T), Environment.GetEnvironmentVariable(variable));

@@ -9,7 +9,7 @@ using RecipeShelf.Site;
 using System;
 using System.Threading.Tasks;
 
-namespace RecipeShelf.Utilities
+namespace RecipeShelf.DataSynchronizer
 {
     public sealed class Program
     {
@@ -35,12 +35,25 @@ namespace RecipeShelf.Utilities
         private static async Task MainAsync(string[] args)
         {
             var fileProxy = _serviceProvider.GetService<IFileProxy>();
-            var markdownProxy = _serviceProvider.GetService<IMarkdownProxy>();
-            var noSqlProxy = _serviceProvider.GetService<INoSqlDbProxy>();
+            var noSqlDbProxy = _serviceProvider.GetService<INoSqlDbProxy>();
             var ingredientCache = _serviceProvider.GetService<IngredientCache>();
-            var recipeCache = _serviceProvider.GetService<RecipeCache>();            
-        }
+            var recipeCache = _serviceProvider.GetService<RecipeCache>();
 
-        
+            foreach (var key in await fileProxy.ListKeysAsync("ingredients"))
+            {
+                var text = await fileProxy.GetTextAsync(key);
+                var ingredient = JsonConvert.DeserializeObject<Ingredient>(text);
+                await noSqlDbProxy.PutIngredientAsync(ingredient);
+                ingredientCache.Store(ingredient);
+            }
+
+            foreach (var key in await fileProxy.ListKeysAsync("recipes"))
+            {
+                var text = await fileProxy.GetTextAsync(key);
+                var recipe = JsonConvert.DeserializeObject<Recipe>(text);
+                await noSqlDbProxy.PutRecipeAsync(recipe);
+                recipeCache.Store(recipe);
+            }
+        }
     }
 }

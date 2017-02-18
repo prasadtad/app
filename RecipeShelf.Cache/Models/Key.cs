@@ -11,21 +11,21 @@ namespace RecipeShelf.Cache.Models
     {
         public readonly string SetKey;
 
-        public readonly Id Id;
+        public readonly string HashField;
 
         public readonly string Value;
 
-        public HashEntry(string setKey, Id id, string value)
+        public HashEntry(string setKey, string hashField, string value)
         {
             SetKey = setKey;
-            Id = id;
+            HashField = hashField;
             Value = value;
         }  
         
-        public HashEntry(string setKey, Id id, bool value)
+        public HashEntry(string setKey, string hashField, bool value)
         {
             SetKey = setKey;
-            Id = id;
+            HashField = hashField;
             Value = value ? Constants.TRUE : Constants.FALSE;
         }      
     }

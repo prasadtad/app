@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace RecipeShelf.Common
 {
@@ -10,7 +11,20 @@ namespace RecipeShelf.Common
         Error
     }
 
-    public sealed class Logger<T>
+    public interface ILogger
+    {
+        void Error(string function, string message);
+
+        void Information(string function, string message);
+
+        void Debug(string function, string message);
+
+        void Trace(string function, string message);
+
+        void Duration(string function, string message, Stopwatch sw);
+    }
+
+    public sealed class Logger<T> : ILogger
     {
         private readonly string _prefix = typeof(T) + ".";
 
@@ -34,7 +48,13 @@ namespace RecipeShelf.Common
             WriteLine(LogLevels.Trace, function, message);
         }
 
-        private void WriteLine(LogLevels level, string function, string message)
+        public void Duration(string function, string message, Stopwatch sw)
+        {
+            sw.Stop();
+            WriteLine(LogLevels.Debug, function, message + " took ", sw.ElapsedMilliseconds + "ms");
+        }
+
+        private void WriteLine(LogLevels level, string function, string message, string suffix = "")
         {
             if (Settings.LogLevel > level) return;
             var orig = Console.ForegroundColor;
@@ -44,7 +64,14 @@ namespace RecipeShelf.Common
             Console.Write(function);
             Console.Write(": ");
             Console.ForegroundColor = orig;
-            Console.WriteLine(message);
+            Console.Write(message);
+            if (!string.IsNullOrEmpty(suffix))
+            {
+                Console.ForegroundColor = ConsoleColor.Magenta;
+                Console.Write(suffix);
+                Console.ForegroundColor = orig;
+            }
+            Console.WriteLine();
         }
     }
 }

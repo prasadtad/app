@@ -8,11 +8,16 @@
         "MarkdownRoot": "C:\\Src\\site",
         "S3FileProxyBucket": "recipeshelf",
         "LocalFileProxyFolder": "C:\\Users\\prasad\\Dropbox\\recipeshelf\\Data",
+        "SQSUrlPrefix": "http://localhost:9324/queue/",
         "UseLocalDynamoDB": "True",
         "FileProxyType": "Local",
         "LogLevel": "Debug",
-        "CommitAndPush": "True"
+        "CommitAndPush": "True",
+        "UseLocalQueue": "True"
       }
+    },
+    "RecipeShelf.DataSynchronizer": {
+      "commandName": "Project"
     }
   }
 }

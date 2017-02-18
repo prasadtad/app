@@ -1,7 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
-
-namespace RecipeShelf.Common.Models
+﻿namespace RecipeShelf.Common.Models
 {
     public struct Id
     {
