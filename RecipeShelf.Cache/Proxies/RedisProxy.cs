@@ -46,9 +46,11 @@ namespace RecipeShelf.Cache.Proxies
             var entries = new List<Models.HashEntry>();
             var db = _redis.GetDatabase();
             IScanningCursor cursor = null;
-            while (cursor == null || cursor.Cursor > 0)
+            long oldCursor = 0;
+            while (cursor == null || cursor.Cursor > oldCursor)
             {
-                var results = db.HashScan(setKey, hashFieldPattern, 10);
+                if (cursor != null) oldCursor = cursor.Cursor;
+                var results = db.HashScan(setKey, hashFieldPattern, 100);
                 foreach (var entry in results)
                     entries.Add(new Models.HashEntry(setKey, entry.Name, entry.Value));
                 cursor = (IScanningCursor)results;

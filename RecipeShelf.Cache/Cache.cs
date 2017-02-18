@@ -81,13 +81,14 @@ namespace RecipeShelf.Cache
             return ids;
         }
 
-        private List<string> GenerateKeyPatterns(string word)
+        private HashSet<string> GenerateKeyPatterns(string word)
         {
-            var patterns = new List<string>();
+            var patterns = new HashSet<string>();
             patterns.Add(word);
             var chars = word.ToCharArray();
             for (var i = 0; i < chars.Length; i++)
             {
+                patterns.Add(new string(chars, 0, i) + new string(chars, i + 1, chars.Length - i - 1));
                 patterns.Add(new string(chars, 0, i) + "?" + new string(chars, i, chars.Length - i));
                 patterns.Add(new string(chars, 0, i) + "?" + new string(chars, i + 1, chars.Length - i - 1));
             }
