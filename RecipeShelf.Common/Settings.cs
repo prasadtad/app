@@ -5,17 +5,17 @@ namespace RecipeShelf.Common
 {
     public static class Settings
     {
-        public static LogLevels LogLevel = GetEnumValue<LogLevels>("LogLevel");
+        public static LogLevels LogLevel = GetEnumValue<LogLevels>("LOG_LEVEL");
 
-        public static FileProxyTypes FileProxyType = GetEnumValue<FileProxyTypes>("FileProxyType");
+        public static FileProxyTypes FileProxyType = GetEnumValue<FileProxyTypes>("FILE_PROXY_TYPE");
 
-        public static string LocalFileProxyFolder = GetValue<string>("LocalFileProxyFolder");
+        public static string LocalFileProxyFolder = GetValue<string>("LOCAL_FILE_PROXY_FOLDER");
 
-        public static string S3FileProxyBucket = GetValue<string>("S3FileProxyBucket");
+        public static string S3FileProxyBucket = GetValue<string>("S3_FILE_PROXY_BUCKET");
 
-        public static bool UseLocalQueue = GetValue<bool>("UseLocalQueue");
+        public static bool UseLocalQueue = GetValue<bool>("USE_LOCAL_QUEUE");
 
-        public static string SQSUrlPrefix = GetValue<string>("SQSUrlPrefix");
+        public static string SQSUrlPrefix = GetValue<string>("SQS_URL_PREFIX");
 
         public static T GetEnumValue<T>(string variable) where T : struct, IConvertible
         {
