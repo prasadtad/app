@@ -45,6 +45,7 @@ namespace RecipeShelf.DataSynchronizer
                 var ingredient = JsonConvert.DeserializeObject<Ingredient>(text);
                 await noSqlDbProxy.PutIngredientAsync(ingredient);
                 ingredientCache.Store(ingredient);
+                await Task.Delay(1000);
             }
 
             foreach (var key in await fileProxy.ListKeysAsync("recipes"))
@@ -53,6 +54,7 @@ namespace RecipeShelf.DataSynchronizer
                 var recipe = JsonConvert.DeserializeObject<Recipe>(text);
                 await noSqlDbProxy.PutRecipeAsync(recipe);
                 recipeCache.Store(recipe);
+                await Task.Delay(1000);
             }
         }
     }
