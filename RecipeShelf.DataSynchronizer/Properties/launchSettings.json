@@ -1,7 +1,7 @@
 {
   "profiles": {
-    "RecipeShelf.Utilities": {
-      "commandName": "Project",
+    "RecipeShelf.DataSynchronizer": {
+      "commandName": "Project",      
       "environmentVariables": {
         "CacheEndpoint": "localhost:6379",
         "MarkdownFolder": "C:\\Src\\site\\site\\content\\recipe",
@@ -15,9 +15,6 @@
         "CommitAndPush": "True",
         "UseLocalQueue": "True"
       }
-    },
-    "RecipeShelf.DataSynchronizer": {
-      "commandName": "Project"
     }
   }
 }
