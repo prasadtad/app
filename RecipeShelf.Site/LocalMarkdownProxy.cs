@@ -13,7 +13,7 @@ namespace RecipeShelf.Site
 
         public async Task PutRecipeAsync(Recipe recipe)
         {
-            var markdownFile = Path.Combine(Settings.MarkdownFolder, recipe.Id.Value + ".md");
+            var markdownFile = Path.Combine(Settings.MarkdownFolder, recipe.Id + ".md");
             var markdownFileExists = File.Exists(markdownFile);
             if (Settings.CommitAndPush)
             {
@@ -23,7 +23,7 @@ namespace RecipeShelf.Site
                 if (!Directory.Exists(Settings.MarkdownFolder))
                     throw new Exception($"{Settings.MarkdownFolder} does not exist. The website should contain a folder to storing recipe markdown.");
             }
-            _logger.Debug("PutRecipe", $"Generating markdown for {recipe.Id.Value}");
+            _logger.Debug("PutRecipe", $"Generating markdown for {recipe.Id}");
             var markdown = recipe.GenerateMarkdown();
             _logger.Debug("PutRecipe", $"Saving markdown file {markdownFile}");
             using (var writer = File.CreateText(markdownFile))

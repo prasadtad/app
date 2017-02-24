@@ -58,41 +58,16 @@ namespace RecipeShelf.Cache.Proxies
             return entries;
         }
 
-        public Id[] Ids(string setKey)
+        public bool IsMember(string setKey, string value)
         {
-            _logger.Debug("Ids", $"Getting {setKey} ids");
-            var values = _redis.GetDatabase().SetMembers(setKey);
-            var ids = new Id[values.Length];
-            for (var i = 0; i < ids.Length; i++) ids[i] = new Id(values[i]);
-            return ids;
-        }
-
-        public bool IsMember(string setKey, Id id)
-        {
-            _logger.Debug("IsMember", $"Checking if {id.Value} is member of {setKey}");
-            return _redis.GetDatabase().SetContains(setKey, id.Value);
+            _logger.Debug("IsMember", $"Checking if {value} is member of {setKey}");
+            return _redis.GetDatabase().SetContains(setKey, value);
         }
 
         public string[] Members(string setKey)
         {
             _logger.Debug("Members", $"Getting {setKey} members");
             return _redis.GetDatabase().SetMembers(setKey).ToStringArray();
-        }
-
-        public Id[] RandomIds(string setKey, int count)
-        {
-            _logger.Debug("RandomIds", $"Getting {count} random members from {setKey}");
-            var db = _redis.GetDatabase();
-            if (count == 1)
-            {
-                var value = db.SetRandomMember(setKey);
-                if (value.IsNullOrEmpty) return new Id[0];
-                return new Id[] { new Id(value) };
-            }
-            var values = db.SetRandomMembers(setKey, count);
-            var ids = new Id[values.Length];
-            for (var i = 0; i < ids.Length; i++) ids[i] = new Id(values[i]);
-            return ids;
         }
 
         public string[] RandomMembers(string setKey, int count)
@@ -128,14 +103,14 @@ namespace RecipeShelf.Cache.Proxies
                     {
                         if (Array.BinarySearch(setEntry.SortedSetNames, setName) < 0)
                         {
-                            transaction.SetRemoveAsync(setEntry.SetPrefix.Append(setName), setEntry.Value.Value);
+                            transaction.SetRemoveAsync(setEntry.SetPrefix.Append(setName), setEntry.Value);
                             count++;
                         }
                     }
                     foreach (var setName in setEntry.SortedSetNames)
                     {
                         if (string.IsNullOrEmpty(setName)) continue;
-                        transaction.SetAddAsync(setEntry.SetPrefix.Append(setName), setEntry.Value.Value);
+                        transaction.SetAddAsync(setEntry.SetPrefix.Append(setName), setEntry.Value);
                         count++;
                     }
                 }

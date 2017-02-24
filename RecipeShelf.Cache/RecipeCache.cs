@@ -5,6 +5,7 @@ using RecipeShelf.Common.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 
 namespace RecipeShelf.Cache
@@ -20,9 +21,9 @@ namespace RecipeShelf.Cache
             _ingredientCache = ingredientCache;
         }
 
-        public Id[] ByChef(string chefId) => CacheProxy.Ids(KeyRegistry.Recipes.ChefId.Append(chefId));
+        public IEnumerable<RecipeId> ByChef(string chefId) => CacheProxy.Members(KeyRegistry.Recipes.ChefId.Append(chefId)).Cast<RecipeId>();
 
-        public Id[] ByFilter(RecipeFilter filter)
+        public IEnumerable<RecipeId> ByFilter(RecipeFilter filter)
         {
             var keys = new List<string>();
             if (filter.Vegan != null) keys.Add(KeyRegistry.Recipes.Vegan.Append(filter.Vegan.Value));
@@ -33,11 +34,16 @@ namespace RecipeShelf.Cache
             if (filter.SpiceLevels != null && filter.SpiceLevels.Length > 0) keys.Add(CacheProxy.Combine(new CombineOptions(LogicalOperator.Or, KeyRegistry.Recipes.SpiceLevel, filter.SpiceLevels.ToStrings())));
             if (filter.TotalTimes != null && filter.TotalTimes.Length > 0) keys.Add(CacheProxy.Combine(new CombineOptions(LogicalOperator.Or, KeyRegistry.Recipes.TotalTime, filter.TotalTimes.ToStrings())));
             if (filter.Collections != null && filter.Collections.Length > 0) keys.Add(CacheProxy.Combine(new CombineOptions(LogicalOperator.Or, KeyRegistry.Recipes.Collection, filter.Collections)));
-            if (keys.Count == 0) return new Id[0];
-            return CacheProxy.Ids(CacheProxy.Combine(new CombineOptions(LogicalOperator.And, keys.ToArray())));
+            if (keys.Count == 0) return new RecipeId[0];
+            return CacheProxy.Members(CacheProxy.Combine(new CombineOptions(LogicalOperator.And, keys.ToArray()))).Cast<RecipeId>();
         }
 
-        public bool IsVegan(Id id) => CacheProxy.IsMember(KeyRegistry.Recipes.Vegan.Append(true), id);
+        public IEnumerable<RecipeId> Search(string sentence)
+        {
+            return SearchNames(sentence).Cast<RecipeId>();
+        }
+
+        public bool IsVegan(RecipeId id) => CacheProxy.IsMember(KeyRegistry.Recipes.Vegan.Append(true), id);
 
         public string[] GetChefs() => CacheProxy.Members(KeyRegistry.Recipes.ChefId);
 
@@ -56,14 +62,14 @@ namespace RecipeShelf.Cache
         {
             var sw = Stopwatch.StartNew();
 
-            var oldNames = CacheProxy.Get(KeyRegistry.Recipes.Names, recipe.Id.Value);
+            var oldNames = CacheProxy.Get(KeyRegistry.Recipes.Names, recipe.Id);
 
             var batch = new List<IEntry>();
 
-            batch.Add(new HashEntry(KeyRegistry.Recipes.Names, recipe.Id.Value, string.Join(Environment.NewLine, recipe.Names)));
+            batch.Add(new HashEntry(KeyRegistry.Recipes.Names, recipe.Id, string.Join(Environment.NewLine, recipe.Names)));
 
             // Store list of ingredientIds with recipeId as key
-            batch.Add(new HashEntry(KeyRegistry.Ingredients.RecipeId, recipe.Id.Value, string.Join(",", recipe.IngredientIds.ToStrings())));
+            batch.Add(new HashEntry(KeyRegistry.Ingredients.RecipeId, recipe.Id, string.Join(",", recipe.IngredientIds)));
 
             var vegan = true;   // Store if recipe is vegan
             foreach (var ingredientId in recipe.IngredientIds)
@@ -92,7 +98,7 @@ namespace RecipeShelf.Cache
 
             CacheProxy.Store(batch);
 
-            Logger.Duration("Store", $"Saving {recipe.Id.Value}", sw);
+            Logger.Duration("Store", $"Saving {recipe.Id}", sw);
         }
     }
 }

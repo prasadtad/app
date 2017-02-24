@@ -44,13 +44,9 @@ namespace RecipeShelf.Cache.Proxies
 
         List<HashEntry> HashScan(string setKey, string hashFieldPattern);
 
-        Id[] Ids(string setKey);
-
-        bool IsMember(string vegan, Id id);
+        bool IsMember(string vegan, string id);
 
         string[] Members(string setKey);
-
-        Id[] RandomIds(string setKey, int count);
 
         string[] RandomMembers(string setKey, int count);
 

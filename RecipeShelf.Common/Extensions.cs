@@ -14,17 +14,19 @@ namespace RecipeShelf.Common
             return values;
         }
 
-        public static Id[] ToIds(this string[] strings)
+        public static string[] ToStrings(this RecipeId[] values)
         {
-            var ids = new Id[strings.Length];
-            for (var i = 0; i < ids.Length; i++) ids[i] = new Id(strings[i]);
-            return ids;
+            var strings = new string[values.Length];
+            for (var i = 0; i < values.Length; i++)
+                strings[i] = values[i];
+            return strings;
         }
 
-        public static string[] ToStrings(this Id[] ids)
+        public static string[] ToStrings(this IngredientId[] values)
         {
-            var strings = new string[ids.Length];
-            for (var i = 0; i < ids.Length; i++) strings[i] = ids[i].Value;
+            var strings = new string[values.Length];
+            for (var i = 0; i < values.Length; i++)
+                strings[i] = values[i];
             return strings;
         }
 

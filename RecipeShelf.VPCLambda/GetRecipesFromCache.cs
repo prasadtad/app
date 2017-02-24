@@ -1,5 +1,7 @@
 ﻿using RecipeShelf.Cache.Models;
 using RecipeShelf.Cache;
+using RecipeShelf.Common.Models;
+using System.Collections.Generic;
 
 namespace RecipeShelf.VPCLambda
 {
@@ -12,13 +14,9 @@ namespace RecipeShelf.VPCLambda
             _recipeCache = recipeCache;
         }
 
-        public string[] Execute(RecipeFilter input)
+        public IEnumerable<RecipeId> Execute(RecipeFilter input)
         {
-            var ids = _recipeCache.ByFilter(input);
-            var idStrings = new string[ids.Length];
-            for (var i = 0; i < ids.Length; i++)
-                idStrings[i] = ids[i].Value;
-            return idStrings;
+            return _recipeCache.ByFilter(input);            
         }
     }
 }

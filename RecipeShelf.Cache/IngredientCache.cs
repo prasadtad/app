@@ -5,6 +5,7 @@ using RecipeShelf.Common.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace RecipeShelf.Cache
 {
@@ -18,29 +19,29 @@ namespace RecipeShelf.Cache
 
         public string[] GetCategories() => CacheProxy.Members(KeyRegistry.Ingredients.Category);
 
-        public Id[] ByCategory(string category) => CacheProxy.Ids(KeyRegistry.Ingredients.Category.Append(category));
+        public IEnumerable<IngredientId> ByCategory(string category) => CacheProxy.Members(KeyRegistry.Ingredients.Category.Append(category)).Cast<IngredientId>();
 
-        public bool IsVegan(Id id) => CacheProxy.GetFlag(KeyRegistry.Ingredients.Vegan, id.Value);
+        public bool IsVegan(IngredientId id) => CacheProxy.GetFlag(KeyRegistry.Ingredients.Vegan, id);
 
         public void Store(Ingredient ingredient)
         {
             var sw = Stopwatch.StartNew();
 
-            var oldNames = CacheProxy.Get(KeyRegistry.Ingredients.Names, ingredient.Id.Value);
+            var oldNames = CacheProxy.Get(KeyRegistry.Ingredients.Names, ingredient.Id);
 
             var batch = new List<IEntry>();
 
-            batch.Add(new HashEntry(KeyRegistry.Ingredients.Names, ingredient.Id.Value, string.Join(Environment.NewLine, ingredient.Names)));
+            batch.Add(new HashEntry(KeyRegistry.Ingredients.Names, ingredient.Id, string.Join(Environment.NewLine, ingredient.Names)));
 
             // For each recipe which uses this ingredient
-            foreach (var recipeId in CacheProxy.Ids(KeyRegistry.Recipes.IngredientId.Append(ingredient.Id.Value)))
+            foreach (var recipeId in CacheProxy.Members(KeyRegistry.Recipes.IngredientId.Append(ingredient.Id)))
             {
                 // Get the ingredients used by the recipe
-                var recipeIngredients = CacheProxy.Get(KeyRegistry.Ingredients.RecipeId, recipeId.Value);
+                var recipeIngredients = CacheProxy.Get(KeyRegistry.Ingredients.RecipeId, recipeId);
                 var vegan = true;
                 foreach (var recipeIngredientId in recipeIngredients.Split(','))
                 {
-                    if (IsVegan(new Id(recipeIngredientId))) continue;
+                    if (IsVegan(recipeIngredientId)) continue;
                     vegan = false;
                     break;
                 }
@@ -51,14 +52,18 @@ namespace RecipeShelf.Cache
             var category = !string.IsNullOrEmpty(ingredient.Category) ? ingredient.Category : IngredientKeys.DEFAULT_CATEGORY;
             batch.Add(new SetEntry(KeyRegistry.Ingredients.Category, category, ingredient.Id));
 
-            batch.Add(new HashEntry(KeyRegistry.Ingredients.Vegan, ingredient.Id.Value, ingredient.Vegan));
+            batch.Add(new HashEntry(KeyRegistry.Ingredients.Vegan, ingredient.Id, ingredient.Vegan));
 
             batch.AddRange(CreateSearchWordEntries(ingredient.Id, oldNames, ingredient.Names));
 
             CacheProxy.Store(batch);
 
-            Logger.Duration("Store", $"Saving {ingredient.Id.Value}", sw);
+            Logger.Duration("Store", $"Saving {ingredient.Id}", sw);
         }
 
+        public IEnumerable<IngredientId> Search(string sentence)
+        {
+            return SearchNames(sentence).Cast<IngredientId>();
+        }
     }
 }

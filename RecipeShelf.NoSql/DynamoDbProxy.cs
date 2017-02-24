@@ -21,7 +21,7 @@ namespace RecipeShelf.NoSql
 
         public async Task PutRecipeAsync(Recipe recipe)
         {
-            _logger.Debug("PutRecipe", $"Putting {recipe.Id.Value} into DynamoDB");
+            _logger.Debug("PutRecipe", $"Putting {recipe.Id} into DynamoDB");
 
             var recipeTable = Table.LoadTable(_client, Constants.RECIPE_TABLE_NAME);
 
@@ -36,7 +36,7 @@ namespace RecipeShelf.NoSql
                 doc["cuisine"] = recipe.Cuisine;
             if (!string.IsNullOrEmpty(recipe.Description))
                 doc["description"] = recipe.Description;
-            doc["id"] = recipe.Id.Value;
+            doc["id"] = (string)recipe.Id;
             if (!string.IsNullOrEmpty(recipe.ImageId))
                 doc["imageId"] = recipe.ImageId;
             if (recipe.IngredientIds != null && recipe.IngredientIds.Length > 0)
@@ -60,14 +60,14 @@ namespace RecipeShelf.NoSql
 
         public async Task PutIngredientAsync(Ingredient ingredient)
         {
-           _logger.Debug("PutIngredient", $"Putting {ingredient.Id.Value} into DynamoDB");
+           _logger.Debug("PutIngredient", $"Putting {ingredient.Id} into DynamoDB");
 
             var ingredientTable = Table.LoadTable(_client, Constants.INGREDIENT_TABLE_NAME);
 
             var doc = new Document();
             if (!string.IsNullOrEmpty(ingredient.Category))
                 doc["category"] = ingredient.Category;
-            doc["id"] = ingredient.Id.Value;
+            doc["id"] = (string)ingredient.Id;
             doc["lastModified"] = ingredient.LastModified;
             doc["names"] = ingredient.Names;
             doc["vegan"] = new DynamoDBBool(ingredient.Vegan);

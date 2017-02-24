@@ -7,7 +7,8 @@ using RecipeShelf.Common;
 using RecipeShelf.Cache;
 using System.Threading.Tasks;
 using Amazon.Lambda.S3Events;
-using System.Linq;
+using RecipeShelf.Common.Models;
+using System.Collections.Generic;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -29,7 +30,7 @@ namespace RecipeShelf.VPCLambda
                                     .BuildServiceProvider();
         }
 
-        public string[] GetRecipesFromCache(RecipeFilter input, ILambdaContext context)
+        public IEnumerable<RecipeId> GetRecipesFromCache(RecipeFilter input, ILambdaContext context)
         {
             _logger.Debug("GetRecipesFromCache", JsonConvert.SerializeObject(input));
             return _serviceProvider.GetService<GetRecipesFromCache>().Execute(input);

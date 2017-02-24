@@ -1,5 +1,4 @@
-﻿using RecipeShelf.Common.Models;
-using System;
+﻿using System;
 
 namespace RecipeShelf.Cache.Models
 {
@@ -36,16 +35,16 @@ namespace RecipeShelf.Cache.Models
 
         public readonly string[] SortedSetNames;
 
-        public readonly Id Value;
+        public readonly string Value;
 
-        public SetEntry(string setPrefix, string name, Id value)
+        public SetEntry(string setPrefix, string name, string value)
         {
             SetPrefix = setPrefix;
             SortedSetNames = new string[] { name };
             Value = value;
         }
 
-        public SetEntry(string setPrefix, string[] names, Id value)
+        public SetEntry(string setPrefix, string[] names, string value)
         {
             SetPrefix = setPrefix;
             Array.Sort(names);
@@ -53,7 +52,7 @@ namespace RecipeShelf.Cache.Models
             Value = value;
         }
 
-        public SetEntry(string setPrefix, bool name, Id value)
+        public SetEntry(string setPrefix, bool name, string value)
         {
             SetPrefix = setPrefix;
             SortedSetNames = new string[] { name ? Constants.TRUE : Constants.FALSE };

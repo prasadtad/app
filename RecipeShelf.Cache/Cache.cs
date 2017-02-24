@@ -1,7 +1,6 @@
 ﻿using RecipeShelf.Cache.Models;
 using RecipeShelf.Cache.Proxies;
 using RecipeShelf.Common;
-using RecipeShelf.Common.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -23,7 +22,7 @@ namespace RecipeShelf.Cache
             Logger = logger;
         }
 
-        protected IEnumerable<IEntry> CreateSearchWordEntries(Id id, string oldNames, string[] names)
+        protected IEnumerable<IEntry> CreateSearchWordEntries(string id, string oldNames, string[] names)
         {
             var newWords = names.SelectMany(Extensions.ToLowerCaseWords);
 
@@ -34,27 +33,27 @@ namespace RecipeShelf.Cache
             foreach (var oldWord in oldWords.Except(newWords))
             {
                 var ids = CacheProxy.Get(SearchWordsKey, oldWord).Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
-                if (!ids.Contains(id.Value)) continue;
-                ids.Remove(id.Value);
+                if (!ids.Contains(id)) continue;
+                ids.Remove(id);
                 entries.Add(new HashEntry(SearchWordsKey, oldWord, string.Join(",", ids)));
             };
 
             foreach (var newWord in newWords)
             {
                 var ids = CacheProxy.Get(SearchWordsKey, newWord).Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
-                if (ids.Contains(id.Value)) continue;
-                ids.Add(id.Value);
+                if (ids.Contains(id)) continue;
+                ids.Add(id);
                 entries.Add(new HashEntry(SearchWordsKey, newWord, string.Join(",", ids)));
             }
 
             return entries;
         }
 
-        public Id[] Search(string sentence)
+        protected IEnumerable<string> SearchNames(string sentence)
         {
             var sw = Stopwatch.StartNew();
 
-            var idStrings = new HashSet<string>();
+            var ids = new HashSet<string>();
             foreach (var word in sentence.ToLowerCaseWords())
             {
                 foreach (var pattern in GenerateKeyPatterns(word))
@@ -64,19 +63,12 @@ namespace RecipeShelf.Cache
                     {
                         var entryIds = entry.Value.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                         foreach (var id in entryIds)
-                            idStrings.Add(id);
+                            ids.Add(id);
                     }
                 }
-            }
-            var ids = new Id[idStrings.Count];
-            var i = 0;
-            foreach (var id in idStrings)
-            {
-                ids[i] = new Id(id);
-                i++;
-            }
+            }           
 
-            Logger.Duration("Search", $"Finding {sentence}", sw);
+            Logger.Duration("SearchNames", $"Finding {sentence}", sw);
 
             return ids;
         }
