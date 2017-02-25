@@ -1,0 +1,28 @@
+{
+  "version": "1.0.0-*",
+  "buildOptions": {
+    "emitEntryPoint": true,
+    "define": []
+  },
+
+  "dependencies": {
+    "AWSSDK.SQS": "3.3.1.7",
+    "Microsoft.Extensions.DependencyInjection": "1.1.0",
+    "Microsoft.NETCore.App": {
+      "version": "1.0.0",
+      "type": "platform"
+    },
+    "RecipeShelf.Data.VPC": "1.0.0-*",
+    "RecipeShelf.Common": "1.0.0-*",
+    "RecipeShelf.Lambda": "1.0.0-*",
+    "RecipeShelf.Data.Server": "1.0.0-*",
+    "RecipeShelf.Lambda.VPC": "1.0.0-*",
+    "RecipeShelf.Data": "1.0.0-*"
+  },
+
+  "frameworks": {
+    "netcoreapp1.0": {
+      "imports": "dnxcore50"
+    }
+  }
+}

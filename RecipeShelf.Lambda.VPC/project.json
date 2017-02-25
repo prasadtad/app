@@ -13,12 +13,12 @@
       "version": "1.0.0",
       "type": "platform"
     },
+    "RecipeShelf.Data.VPC": "1.0.0-*",
     "Microsoft.Extensions.DependencyInjection": "1.1.0",
-    "RecipeShelf.Common": "1.0.0-*",
-    "RecipeShelf.Data": "1.0.0-*"
+    "RecipeShelf.Common": "1.0.0-*"
   },
   "tools": {
-    "Amazon.Lambda.Tools" : "1.1.0-preview1"
+    "Amazon.Lambda.Tools": "1.1.0-preview1"
   },
   "frameworks": {
     "netcoreapp1.0": {

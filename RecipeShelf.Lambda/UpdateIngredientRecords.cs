@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using RecipeShelf.Common.Models;
 using RecipeShelf.Common.Proxies;
-using RecipeShelf.NoSql;
+using RecipeShelf.Data.Proxies;
 using System.Threading.Tasks;
 
 namespace RecipeShelf.Lambda

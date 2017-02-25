@@ -1,27 +1,27 @@
 ﻿using Newtonsoft.Json;
+using RecipeShelf.Data.VPC;
 using RecipeShelf.Common.Models;
 using RecipeShelf.Common.Proxies;
-using RecipeShelf.Data.Proxies;
 using System.Threading.Tasks;
 
-namespace RecipeShelf.Lambda
+namespace RecipeShelf.Lambda.VPC
 {
-    public sealed class UpdateRecipeRecords
+    public sealed class UpdateRecipeCache
     {
-        private readonly INoSqlDbProxy _noSqlDbProxy;
         private readonly IFileProxy _fileProxy;
+        private readonly RecipeCache _recipeCache;
 
-        public UpdateRecipeRecords(INoSqlDbProxy noSqlDbProxy, IFileProxy fileProxy)
+        public UpdateRecipeCache(IFileProxy fileProxy, RecipeCache recipeCache)
         {
-            _noSqlDbProxy = noSqlDbProxy;
             _fileProxy = fileProxy;
+            _recipeCache = recipeCache;
         }
 
         public async Task ExecuteAsync(string key)
         {
             var text = await _fileProxy.GetTextAsync(key);
             var recipe = JsonConvert.DeserializeObject<Recipe>(text);
-            await _noSqlDbProxy.PutRecipeAsync(recipe);
+            _recipeCache.Store(recipe);            
         }
     }
 }

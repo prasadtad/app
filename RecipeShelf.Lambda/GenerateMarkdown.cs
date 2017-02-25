@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 using RecipeShelf.Common.Proxies;
 using System.Threading.Tasks;
 
-namespace RecipeShelf.Site
+namespace RecipeShelf.Data.Server
 {
     public sealed class GenerateMarkdown
     {

@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using RecipeShelf.Common;
 using System.Threading.Tasks;
 using Amazon.Lambda.S3Events;
-using RecipeShelf.NoSql;
+using RecipeShelf.Data;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -21,7 +21,7 @@ namespace RecipeShelf.Lambda
             _logger = new Logger<Functions>();            
             _serviceProvider = new ServiceCollection()
                                     .AddCommon()
-                                    .AddNoSql()
+                                    .AddData()
                                     .AddLambda()
                                     .BuildServiceProvider();
         }

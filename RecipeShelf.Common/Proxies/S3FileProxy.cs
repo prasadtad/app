@@ -1,6 +1,7 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.S3.Transfer;
+using RecipeShelf.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;

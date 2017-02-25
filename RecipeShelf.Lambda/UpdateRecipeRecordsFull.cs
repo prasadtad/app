@@ -1,4 +1,5 @@
 ﻿using RecipeShelf.Common.Proxies;
+using RecipeShelf.Data.Proxies;
 using System.Threading.Tasks;
 
 namespace RecipeShelf.Lambda

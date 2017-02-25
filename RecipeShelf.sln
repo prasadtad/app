@@ -3,19 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "RecipeShelf.Cache", "RecipeShelf.Cache\RecipeShelf.Cache.xproj", "{04AC1D83-54BE-48F8-B48F-0307DC370E60}"
-EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "RecipeShelf.Common", "RecipeShelf.Common\RecipeShelf.Common.xproj", "{999D9FE6-B033-4B89-B93E-35DAD76D2727}"
-EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "RecipeShelf.Site", "RecipeShelf.Site\RecipeShelf.Site.xproj", "{EF8E74DA-1920-4A48-8AB4-071BBDC14DD4}"
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "RecipeShelf.Lambda", "RecipeShelf.Lambda\RecipeShelf.Lambda.xproj", "{1D6FC9F4-6D6F-4C7D-9EBF-4FD230EF95EB}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "RecipeShelf.VPCLambda", "RecipeShelf.VPCLambda\RecipeShelf.VPCLambda.xproj", "{5D7D2FB4-DD1D-410D-A9AD-2801ED6C94B1}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "RecipeShelf.Data", "RecipeShelf.Data\RecipeShelf.Data.xproj", "{26E45ABA-4C77-45B0-A1A8-2E1B6C00B927}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "RecipeShelf.NoSql", "RecipeShelf.NoSql\RecipeShelf.NoSql.xproj", "{26E45ABA-4C77-45B0-A1A8-2E1B6C00B927}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "RecipeShelf.Data.Server", "RecipeShelf.Data.Server\RecipeShelf.Data.Server.xproj", "{EF8E74DA-1920-4A48-8AB4-071BBDC14DD4}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "RecipeShelf.DataSynchronizer", "RecipeShelf.DataSynchronizer\RecipeShelf.DataSynchronizer.xproj", "{4B61622D-953C-4658-AEA3-DF9F110A0400}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "RecipeShelf.Data.VPC", "RecipeShelf.Data.VPC\RecipeShelf.Data.VPC.xproj", "{04AC1D83-54BE-48F8-B48F-0307DC370E60}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "RecipeShelf.Lambda.VPC", "RecipeShelf.Lambda.VPC\RecipeShelf.Lambda.VPC.xproj", "{5D7D2FB4-DD1D-410D-A9AD-2801ED6C94B1}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "RecipeShelf.Persistence", "RecipeShelf.Persistence\RecipeShelf.Persistence.xproj", "{4B61622D-953C-4658-AEA3-DF9F110A0400}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,30 +23,30 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{04AC1D83-54BE-48F8-B48F-0307DC370E60}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{04AC1D83-54BE-48F8-B48F-0307DC370E60}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{04AC1D83-54BE-48F8-B48F-0307DC370E60}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{04AC1D83-54BE-48F8-B48F-0307DC370E60}.Release|Any CPU.Build.0 = Release|Any CPU
 		{999D9FE6-B033-4B89-B93E-35DAD76D2727}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{999D9FE6-B033-4B89-B93E-35DAD76D2727}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{999D9FE6-B033-4B89-B93E-35DAD76D2727}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{999D9FE6-B033-4B89-B93E-35DAD76D2727}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EF8E74DA-1920-4A48-8AB4-071BBDC14DD4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EF8E74DA-1920-4A48-8AB4-071BBDC14DD4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EF8E74DA-1920-4A48-8AB4-071BBDC14DD4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EF8E74DA-1920-4A48-8AB4-071BBDC14DD4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1D6FC9F4-6D6F-4C7D-9EBF-4FD230EF95EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1D6FC9F4-6D6F-4C7D-9EBF-4FD230EF95EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1D6FC9F4-6D6F-4C7D-9EBF-4FD230EF95EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1D6FC9F4-6D6F-4C7D-9EBF-4FD230EF95EB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5D7D2FB4-DD1D-410D-A9AD-2801ED6C94B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5D7D2FB4-DD1D-410D-A9AD-2801ED6C94B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5D7D2FB4-DD1D-410D-A9AD-2801ED6C94B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5D7D2FB4-DD1D-410D-A9AD-2801ED6C94B1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{26E45ABA-4C77-45B0-A1A8-2E1B6C00B927}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{26E45ABA-4C77-45B0-A1A8-2E1B6C00B927}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{26E45ABA-4C77-45B0-A1A8-2E1B6C00B927}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{26E45ABA-4C77-45B0-A1A8-2E1B6C00B927}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EF8E74DA-1920-4A48-8AB4-071BBDC14DD4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF8E74DA-1920-4A48-8AB4-071BBDC14DD4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF8E74DA-1920-4A48-8AB4-071BBDC14DD4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF8E74DA-1920-4A48-8AB4-071BBDC14DD4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{04AC1D83-54BE-48F8-B48F-0307DC370E60}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{04AC1D83-54BE-48F8-B48F-0307DC370E60}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{04AC1D83-54BE-48F8-B48F-0307DC370E60}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{04AC1D83-54BE-48F8-B48F-0307DC370E60}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D7D2FB4-DD1D-410D-A9AD-2801ED6C94B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D7D2FB4-DD1D-410D-A9AD-2801ED6C94B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D7D2FB4-DD1D-410D-A9AD-2801ED6C94B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D7D2FB4-DD1D-410D-A9AD-2801ED6C94B1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4B61622D-953C-4658-AEA3-DF9F110A0400}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4B61622D-953C-4658-AEA3-DF9F110A0400}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4B61622D-953C-4658-AEA3-DF9F110A0400}.Release|Any CPU.ActiveCfg = Release|Any CPU
