@@ -19,6 +19,13 @@ namespace RecipeShelf.Data.Proxies
             _client = Settings.UseLocalDynamoDB ? new AmazonDynamoDBClient(new BasicAWSCredentials("Local", "Local"), new AmazonDynamoDBConfig { ServiceURL = "http://localhost:8000" }) : new AmazonDynamoDBClient();
         }
 
+        public async Task<bool> CanConnectAsync()
+        {
+            _logger.Debug("CanConnect", $"Checking if Recipes and Ingredients tables exist");
+            var response = await _client.ListTablesAsync();
+            return response.TableNames != null && response.TableNames.Contains("Recipes") && response.TableNames.Contains("Ingredients");
+        }
+
         public async Task PutRecipeAsync(Recipe recipe)
         {
             _logger.Debug("PutRecipe", $"Putting {recipe.Id} into DynamoDB");

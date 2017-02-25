@@ -6,5 +6,7 @@ namespace RecipeShelf.Data.Server.Proxies
     public interface IMarkdownProxy
     {
         Task PutRecipeMarkdownAsync(Recipe recipe);
+
+        bool CanConnect();
     }
 }

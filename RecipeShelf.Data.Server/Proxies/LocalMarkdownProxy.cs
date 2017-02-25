@@ -11,6 +11,12 @@ namespace RecipeShelf.Data.Server.Proxies
     {
         private readonly Logger<LocalMarkdownProxy> _logger = new Logger<LocalMarkdownProxy>();
 
+        public bool CanConnect()
+        {
+            _logger.Debug("CanConnect", $"Checking if recipe markdown folder exists");
+            return Directory.Exists(Settings.MarkdownFolder);
+        }
+
         public async Task PutRecipeMarkdownAsync(Recipe recipe)
         {
             var markdownFile = Path.Combine(Settings.MarkdownFolder, recipe.Id + ".md");

@@ -2,12 +2,18 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using System;
 
 namespace RecipeShelf.Common.Proxies
 {
     public sealed class LocalFileProxy : IFileProxy
     {
         private readonly Logger<LocalFileProxy> _logger = new Logger<LocalFileProxy>();
+
+        public Task<bool> CanConnectAsync()
+        {
+            return Task.FromResult(true);
+        }
 
         public async Task<string> GetTextAsync(string key)
         {

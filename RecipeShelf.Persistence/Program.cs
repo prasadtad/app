@@ -10,11 +10,12 @@ using System;
 using System.Threading.Tasks;
 using RecipeShelf.Data.Proxies;
 using RecipeShelf.Data.Server.Proxies;
+using System.Collections.Generic;
 
 namespace RecipeShelf.Persistence
 {
     public sealed class Program
-    {
+    {        
         private static IServiceProvider _serviceProvider;
         private static Logger<Program> _logger;
 
@@ -34,7 +35,7 @@ namespace RecipeShelf.Persistence
             MainAsync(args).GetAwaiter().GetResult();
         }
 
-        private static async Task MainAsync(string[] args)
+        private static Task MainAsync(string[] args)
         {
             var fileProxy = _serviceProvider.GetService<IFileProxy>();
             var noSqlDbProxy = _serviceProvider.GetService<INoSqlDbProxy>();
@@ -43,23 +44,41 @@ namespace RecipeShelf.Persistence
             var distributedQueueProxy = _serviceProvider.GetService<IDistributedQueueProxy>();
             var markdownProxy = _serviceProvider.GetService<IMarkdownProxy>();
 
-            foreach (var key in await fileProxy.ListKeysAsync("ingredients"))
+            return distributedQueueProxy.ProcessMessagesAsync("data-updates", async messages =>
             {
-                var text = await fileProxy.GetTextAsync(key);
-                var ingredient = JsonConvert.DeserializeObject<Ingredient>(text);
-                await noSqlDbProxy.PutIngredientAsync(ingredient);
-                ingredientCache.Store(ingredient);
-                await Task.Delay(1000);
-            }
+                foreach (var message in messages)
+                {
+                    var table = message.Attributes["Table"];
+                    if (table == "Recipes")
+                        message.Processed = await PersistRecipeAsync(JsonConvert.DeserializeObject<Recipe>(message.Body), fileProxy, noSqlDbProxy, recipeCache, markdownProxy);
+                    else if (table == "Ingredients")
+                        message.Processed = await PersistIngredientAsync(JsonConvert.DeserializeObject<Ingredient>(message.Body), fileProxy, noSqlDbProxy, ingredientCache);
+                }
+            });            
+        }
 
-            foreach (var key in await fileProxy.ListKeysAsync("recipes"))
-            {
-                var text = await fileProxy.GetTextAsync(key);
-                var recipe = JsonConvert.DeserializeObject<Recipe>(text);
-                await noSqlDbProxy.PutRecipeAsync(recipe);
-                recipeCache.Store(recipe);
-                await Task.Delay(1000);
-            }
+        private static async Task<bool> PersistIngredientAsync(Ingredient ingredient, IFileProxy fileProxy, INoSqlDbProxy noSqlProxy, IngredientCache ingredientCache)
+        {
+            if (!await fileProxy.CanConnectAsync() ||
+                !await noSqlProxy.CanConnectAsync() ||
+                !ingredientCache.CanConnect()) return false;
+            await fileProxy.PutTextAsync($"ingredients/{ingredient.Id}.json", JsonConvert.SerializeObject(ingredient, Formatting.Indented));
+            await noSqlProxy.PutIngredientAsync(ingredient);
+            ingredientCache.Store(ingredient);
+            return true;
+        }
+
+        private static async Task<bool> PersistRecipeAsync(Recipe recipe, IFileProxy fileProxy, INoSqlDbProxy noSqlProxy, RecipeCache recipeCache, IMarkdownProxy markdownProxy)
+        {
+            if (!await fileProxy.CanConnectAsync() ||
+                !await noSqlProxy.CanConnectAsync() ||
+                !recipeCache.CanConnect() ||
+                !markdownProxy.CanConnect()) return false;
+            await fileProxy.PutTextAsync($"recipes/{recipe.Id}.json", JsonConvert.SerializeObject(recipe, Formatting.Indented));
+            await noSqlProxy.PutRecipeAsync(recipe);
+            recipeCache.Store(recipe);
+            await markdownProxy.PutRecipeMarkdownAsync(recipe);
+            return true;
         }
     }
 }

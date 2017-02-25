@@ -21,6 +21,11 @@ namespace RecipeShelf.Data.VPC
             CacheProxy = cacheProxy;
             Logger = logger;
         }
+        
+        public bool CanConnect()
+        {
+            return CacheProxy.CanConnect();
+        }
 
         protected IEnumerable<IEntry> CreateSearchWordEntries(string id, string oldNames, string[] names)
         {

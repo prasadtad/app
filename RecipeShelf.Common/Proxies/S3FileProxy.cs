@@ -1,7 +1,6 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.S3.Transfer;
-using RecipeShelf.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,7 +13,13 @@ namespace RecipeShelf.Common.Proxies
         private TransferUtility _transferUtility = new TransferUtility();
 
         private readonly Logger<S3FileProxy> _logger = new Logger<S3FileProxy>();
-        
+
+        public Task<bool> CanConnectAsync()
+        {
+            _logger.Debug("CanConnect", $"Checking if {Settings.S3FileProxyBucket} exists");
+            return _transferUtility.S3Client.DoesS3BucketExistAsync(Settings.S3FileProxyBucket);
+        }
+
         public async Task<IEnumerable<string>> ListKeysAsync(string folder)
         {
             _logger.Debug("ListKeys", $"Listing keys for {folder}");

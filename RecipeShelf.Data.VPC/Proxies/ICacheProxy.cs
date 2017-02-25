@@ -51,5 +51,7 @@ namespace RecipeShelf.Data.VPC.Proxies
         string[] RandomMembers(string setKey, int count);
 
         void Store(IEnumerable<IEntry> batch);
+
+        bool CanConnect();
     }
 }

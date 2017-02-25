@@ -137,5 +137,11 @@ namespace RecipeShelf.Data.VPC.Proxies
             _redis.GetDatabase().SetCombineAndStore(setOp, key.Destination, keys);
             return key.Destination;
         }
+
+        public bool CanConnect()
+        {
+            _logger.Debug("CanConnect", $"Checking if redis is connected");
+            return _redis.IsConnected;
+        }
     }
 }

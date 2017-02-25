@@ -8,5 +8,7 @@ namespace RecipeShelf.Data.Proxies
         Task PutRecipeAsync(Recipe recipe);
 
         Task PutIngredientAsync(Ingredient ingredient);
+
+        Task<bool> CanConnectAsync();
     }
 }
