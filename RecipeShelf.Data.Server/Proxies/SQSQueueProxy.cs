@@ -31,8 +31,8 @@ namespace RecipeShelf.Data.Server.Proxies
                 var response = await ReceiveMessageFromQueueAsync(queueUrl);
                 if (response.Messages.Count == 0)
                 {
-                    _logger.Information("ProcessMessages", $"No messages on {queueName}, sleeping for 2 seconds");
-                    await Task.Delay(2000);
+                    _logger.Information("ProcessMessages", $"No messages on {queueName}, sleeping for a minute");
+                    await Task.Delay(60000);
                     continue;
                 }
                 _logger.Information("ProcessMessages", $"Processing {response.Messages.Count} messages on {queueName}");

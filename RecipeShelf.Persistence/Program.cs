@@ -10,12 +10,11 @@ using System;
 using System.Threading.Tasks;
 using RecipeShelf.Data.Proxies;
 using RecipeShelf.Data.Server.Proxies;
-using System.Collections.Generic;
 
 namespace RecipeShelf.Persistence
 {
     public sealed class Program
-    {        
+    {
         private static IServiceProvider _serviceProvider;
         private static Logger<Program> _logger;
 
@@ -32,7 +31,14 @@ namespace RecipeShelf.Persistence
 
         public static void Main(string[] args)
         {
-            MainAsync(args).GetAwaiter().GetResult();
+            try
+            {
+                MainAsync(args).GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                Console.Write(ex.ToString());
+            }
         }
 
         private static Task MainAsync(string[] args)
@@ -54,7 +60,7 @@ namespace RecipeShelf.Persistence
                     else if (table == "Ingredients")
                         message.Processed = await PersistIngredientAsync(JsonConvert.DeserializeObject<Ingredient>(message.Body), fileProxy, noSqlDbProxy, ingredientCache);
                 }
-            });            
+            });
         }
 
         private static async Task<bool> PersistIngredientAsync(Ingredient ingredient, IFileProxy fileProxy, INoSqlDbProxy noSqlProxy, IngredientCache ingredientCache)

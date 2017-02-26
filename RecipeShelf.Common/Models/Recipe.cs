@@ -7,6 +7,7 @@ namespace RecipeShelf.Common.Models
     public sealed class Recipe
     {
         [JsonProperty("id")]
+        [JsonConverter(typeof(RecipeIdConverter))]
         public RecipeId Id { get; set; }
 
         [JsonProperty("lastModified")]
@@ -62,12 +63,14 @@ namespace RecipeShelf.Common.Models
         public string Cuisine { get; set; }
 
         [JsonProperty("ingredientIds")]
+        [JsonConverter(typeof(IngredientIdConverter))]
         public IngredientId[] IngredientIds { get; set; }
 
         [JsonProperty("overnightPreparation")]
         public bool OvernightPreparation { get; set; }
 
         [JsonProperty("accompanimentIds", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonConverter(typeof(RecipeIdConverter))]
         public RecipeId[] AccompanimentIds { get; set; }
 
         [JsonProperty("collections", NullValueHandling = NullValueHandling.Ignore)]

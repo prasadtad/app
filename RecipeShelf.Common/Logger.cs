@@ -26,7 +26,7 @@ namespace RecipeShelf.Common
 
     public sealed class Logger<T> : ILogger
     {
-        private readonly string _prefix = typeof(T) + ".";
+        private readonly string _prefix = typeof(T).Name + ".";
 
         public void Error(string function, string message)
         {

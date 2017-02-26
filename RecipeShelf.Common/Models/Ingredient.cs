@@ -7,6 +7,7 @@ namespace RecipeShelf.Common.Models
     public sealed class Ingredient
     {
         [JsonProperty("id")]
+        [JsonConverter(typeof(IngredientIdConverter))]
         public IngredientId Id { get; set; }
 
         [JsonProperty("lastModified")]
