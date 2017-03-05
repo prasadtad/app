@@ -1,13 +1,15 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using RecipeShelf.Data.Proxies;
 
 namespace RecipeShelf.Data
 {
     public static class Setup
     {
-        public static IServiceCollection AddData(this IServiceCollection services)
+        public static IServiceCollection AddData(this IServiceCollection services, IConfigurationSection recipeshelfConfiguration)
         {
-            return services.AddSingleton<INoSqlDbProxy, DynamoDbProxy>(c => new DynamoDbProxy());
+            services.Configure<DataSettings>(recipeshelfConfiguration.GetSection("Data"));
+            return services.AddSingleton<INoSqlDbProxy, DynamoDbProxy>();
         }
     }
 }

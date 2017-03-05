@@ -1,16 +1,17 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using RecipeShelf.Data.VPC.Proxies;
 
 namespace RecipeShelf.Data.VPC
 {
     public static class Setup
     {
-        public static IServiceCollection AddVPCData(this IServiceCollection services)
+        public static IServiceCollection AddVPCData(this IServiceCollection services, IConfigurationSection recipeshelfConfiguration)
         {
-            var cacheProxy = new RedisProxy();
-            var ingredientCache = new IngredientCache(cacheProxy);
-            return services.AddSingleton(ingredientCache)
-                           .AddSingleton(new RecipeCache(cacheProxy, ingredientCache));
+            services.Configure<DataVPCSettings>(recipeshelfConfiguration.GetSection("DataVPC"));
+            return services.AddSingleton<ICacheProxy, RedisProxy>()
+                           .AddSingleton<IngredientCache>()
+                           .AddSingleton<RecipeCache>();
         }
     }
 }

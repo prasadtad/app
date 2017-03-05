@@ -1,6 +1,7 @@
-﻿using Amazon.S3;
-using Amazon.S3.Model;
+﻿using Amazon.S3.Model;
 using Amazon.S3.Transfer;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,64 +13,54 @@ namespace RecipeShelf.Common.Proxies
     {
         private TransferUtility _transferUtility = new TransferUtility();
 
-        private readonly Logger<S3FileProxy> _logger = new Logger<S3FileProxy>();
+        private readonly ILogger<S3FileProxy> _logger;
+        private readonly CommonSettings _settings;
+
+        public S3FileProxy(ILogger<S3FileProxy> logger, IOptions<CommonSettings> optionsAccessor)
+        {
+            _logger = logger;
+            _settings = optionsAccessor.Value;
+        }
 
         public Task<bool> CanConnectAsync()
         {
-            _logger.Debug("CanConnect", $"Checking if {Settings.S3FileProxyBucket} exists");
-            return _transferUtility.S3Client.DoesS3BucketExistAsync(Settings.S3FileProxyBucket);
+            _logger.LogDebug("Checking if {S3Bucket} exists", _settings.S3FileProxyBucket);
+            return _transferUtility.S3Client.DoesS3BucketExistAsync(_settings.S3FileProxyBucket);
         }
 
         public async Task<IEnumerable<string>> ListKeysAsync(string folder)
         {
-            _logger.Debug("ListKeys", $"Listing keys for {folder}");
+            _logger.LogDebug("Listing keys in {Folder}", folder);
             var allKeys = new List<string>();
-            try
+            ListObjectsV2Request request = new ListObjectsV2Request
             {
-                ListObjectsV2Request request = new ListObjectsV2Request
-                {
-                    BucketName = Settings.S3FileProxyBucket,
-                    MaxKeys = 100,
-                    Prefix = folder + "/"
-                };
-                ListObjectsV2Response response;
-                do
-                {
-                    response = await _transferUtility.S3Client.ListObjectsV2Async(request);
-
-                    // Process response.
-                    foreach (S3Object entry in response.S3Objects)
-                    {
-                        if (entry.Key.Equals(folder + "/")) continue;
-                        allKeys.Add(entry.Key);
-                    }
-
-                    request.ContinuationToken = response.NextContinuationToken;
-                } while (response.IsTruncated == true);
-            }
-            catch (AmazonS3Exception amazonS3Exception)
+                BucketName = _settings.S3FileProxyBucket,
+                MaxKeys = 100,
+                Prefix = folder + "/"
+            };
+            ListObjectsV2Response response;
+            do
             {
-                if (amazonS3Exception.ErrorCode != null &&
-                    (amazonS3Exception.ErrorCode.Equals("InvalidAccessKeyId")
-                    ||
-                    amazonS3Exception.ErrorCode.Equals("InvalidSecurity")))
+                response = await _transferUtility.S3Client.ListObjectsV2Async(request);
+
+                // Process response.
+                foreach (S3Object entry in response.S3Objects)
                 {
-                    _logger.Error("ListKeys", "Check the provided AWS Credentials.");
-                    _logger.Error("ListKeys", "To sign up for service, go to http://aws.amazon.com/s3");
+                    if (entry.Key.Equals(folder + "/")) continue;
+                    allKeys.Add(entry.Key);
                 }
-                else
-                    _logger.Error("ListKeys", $"Error occurred. Message:'{amazonS3Exception.Message}' when listing objects");
-                throw;
-            }
+
+                request.ContinuationToken = response.NextContinuationToken;
+            } while (response.IsTruncated == true);
             return allKeys;
         }
 
         public async Task<string> GetTextAsync(string key)
         {
-            _logger.Debug("GetText", $"Getting {key} as text");
+            _logger.LogDebug("Reading {Key} as text", key);
             var request = new GetObjectRequest
             {
-                BucketName = Settings.S3FileProxyBucket,
+                BucketName = _settings.S3FileProxyBucket,
                 Key = key
             };
             using (GetObjectResponse response = await _transferUtility.S3Client.GetObjectAsync(request))
@@ -80,10 +71,10 @@ namespace RecipeShelf.Common.Proxies
 
         public async Task PutTextAsync(string key, string text)
         {
-            _logger.Debug("PutText", $"Putting text at {key}");
+            _logger.LogDebug("Putting text at {Key}", key);
             var request = new PutObjectRequest
             {
-                BucketName = Settings.S3FileProxyBucket,
+                BucketName = _settings.S3FileProxyBucket,
                 Key = key,
                 ContentBody = text
             };

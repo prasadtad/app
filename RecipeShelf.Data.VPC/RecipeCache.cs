@@ -4,8 +4,8 @@ using RecipeShelf.Common;
 using RecipeShelf.Common.Models;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace RecipeShelf.Data.VPC
 {
@@ -15,7 +15,7 @@ namespace RecipeShelf.Data.VPC
 
         protected override string SearchWordsKey => KeyRegistry.Recipes.SearchWords;
 
-        public RecipeCache(ICacheProxy cacheProxy, IngredientCache ingredientCache) : base(cacheProxy, new Logger<RecipeCache>())
+        public RecipeCache(ICacheProxy cacheProxy, IngredientCache ingredientCache, ILogger<RecipeCache> logger) : base(cacheProxy, logger)
         {
             _ingredientCache = ingredientCache;
         }
@@ -59,7 +59,7 @@ namespace RecipeShelf.Data.VPC
 
         public void Store(Recipe recipe)
         {
-            var sw = Stopwatch.StartNew();
+            Logger.LogDebug("Saving Recipe {Id} in cache", recipe.Id);
 
             var oldNames = CacheProxy.Get(KeyRegistry.Recipes.Names, recipe.Id);
 
@@ -96,8 +96,6 @@ namespace RecipeShelf.Data.VPC
             batch.AddRange(CreateSearchWordEntries(recipe.Id, oldNames, recipe.Names));
 
             CacheProxy.Store(batch);
-
-            Logger.Duration("Store", $"Saving {recipe.Id}", sw);
         }
     }
 }

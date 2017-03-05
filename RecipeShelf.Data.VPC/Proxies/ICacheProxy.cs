@@ -42,6 +42,8 @@ namespace RecipeShelf.Data.VPC.Proxies
 
         bool GetFlag(string setKey, string hashField);
 
+        string[] HashFields(string setKey);
+
         List<HashEntry> HashScan(string setKey, string hashFieldPattern);
 
         bool IsMember(string vegan, string id);

@@ -5,30 +5,67 @@ using RecipeShelf.Common.Models;
 using Amazon.Runtime;
 using Amazon.DynamoDBv2.DocumentModel;
 using RecipeShelf.Common;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace RecipeShelf.Data.Proxies
 {
     public sealed class DynamoDbProxy : INoSqlDbProxy, IDisposable
     {
-        private readonly Logger<DynamoDbProxy> _logger = new Logger<DynamoDbProxy>();
+        private readonly ILogger<DynamoDbProxy> _logger;
+
+        private readonly DataSettings _settings;
 
         private AmazonDynamoDBClient _client;
 
-        public DynamoDbProxy()
+        public DynamoDbProxy(ILogger<DynamoDbProxy> logger, IOptions<DataSettings> optionsAccessor)
         {
-            _client = Settings.UseLocalDynamoDB ? new AmazonDynamoDBClient(new BasicAWSCredentials("Local", "Local"), new AmazonDynamoDBConfig { ServiceURL = "http://localhost:8000" }) : new AmazonDynamoDBClient();
+            _logger = logger;
+            _settings = optionsAccessor.Value;
+            _client = _settings.UseLocalDynamoDB ? new AmazonDynamoDBClient(new BasicAWSCredentials("Local", "Local"), new AmazonDynamoDBConfig { ServiceURL = "http://localhost:8000" }) : new AmazonDynamoDBClient();
         }
 
         public async Task<bool> CanConnectAsync()
         {
-            _logger.Debug("CanConnect", $"Checking if Recipes and Ingredients tables exist");
+            _logger.LogDebug("Checking if Recipes and Ingredients tables exist in DynamoDB");
             var response = await _client.ListTablesAsync();
             return response.TableNames != null && response.TableNames.Contains("Recipes") && response.TableNames.Contains("Ingredients");
         }
 
+        public async Task<Recipe> GetRecipeAsync(RecipeId id)
+        {
+            _logger.LogDebug("Getting Recipe {Id} from DynamoDB", id);
+
+            var recipeTable = Table.LoadTable(_client, "Recipes");
+            var doc = await recipeTable.GetItemAsync(new Primitive(id));
+
+            var recipe = new Recipe { Id = id };
+            recipe.AccompanimentIds = doc.ContainsKey("accompanimentIds") ? doc["accompanimentIds"].AsArrayOfString().Cast<RecipeId>().ToArray() : null;
+            recipe.Approved = doc["approved"].AsBoolean();
+            recipe.ChefId = doc["chefId"].AsString();
+            recipe.Collections = doc.ContainsKey("collections") ? doc["collections"].AsArrayOfString() : null;
+            recipe.Cuisine = doc["cuisine"].AsString();
+            recipe.Description = doc["description"].AsString();
+            recipe.ImageId = doc.ContainsKey("imageId") ? doc["imageId"].AsString() : null;
+            recipe.IngredientIds = doc.ContainsKey("ingredientIds") ? doc["ingredientIds"].AsArrayOfString().Cast<IngredientId>().ToArray() : null;
+            recipe.Ingredients = doc.ContainsKey("ingredients") ? FromDynamoDBList(doc["ingredients"].AsDynamoDBList()) : null;
+            recipe.LastModified = doc["lastModified"].AsDateTime();
+            recipe.Names = doc["names"].AsArrayOfString();
+            recipe.OvernightPreparation = doc["overnightPreparation"].AsBoolean();
+            recipe.Region = doc.ContainsKey("region") ? doc["region"].AsString() : null;
+            recipe.Servings = doc.ContainsKey("servings") ? doc["servings"].AsString() : null;
+            recipe.SpiceLevel = (SpiceLevel)Enum.Parse(typeof(SpiceLevel), doc["spiceLevel"].AsString());
+            recipe.Steps = doc.ContainsKey("steps") ? FromDynamoDBList(doc["steps"].AsDynamoDBList()) : null;
+            recipe.TotalTimeInMinutes = doc["totalTimeInMinutes"].AsInt();
+
+            return recipe;
+        }
+
         public async Task PutRecipeAsync(Recipe recipe)
         {
-            _logger.Debug("PutRecipe", $"Putting {recipe.Id} into DynamoDB");
+            _logger.LogDebug("Putting Recipe {Id} into DynamoDB", recipe.Id);
 
             var recipeTable = Table.LoadTable(_client, "Recipes");
 
@@ -65,9 +102,25 @@ namespace RecipeShelf.Data.Proxies
             await recipeTable.PutItemAsync(doc);
         }
 
+        public async Task<Ingredient> GetIngredientAsync(IngredientId id)
+        {
+            _logger.LogDebug("Getting Ingredient {Id} from DynamoDB", id);
+
+            var ingredientTable = Table.LoadTable(_client, "Ingredients");
+            var doc = await ingredientTable.GetItemAsync(new Primitive(id));
+
+            var ingredient = new Ingredient { Id = id };
+            ingredient.LastModified = doc["lastModified"].AsDateTime();
+            ingredient.Names = doc["names"].AsArrayOfString();
+            ingredient.Description = doc.ContainsKey("description") ? doc["description"].AsString() : null;
+            ingredient.Category = doc.ContainsKey("category") ? doc["category"].AsString() : null;
+            ingredient.Vegan = doc["vegan"].AsBoolean();
+            return ingredient;
+        }
+
         public async Task PutIngredientAsync(Ingredient ingredient)
         {
-           _logger.Debug("PutIngredient", $"Putting {ingredient.Id} into DynamoDB");
+            _logger.LogDebug("Putting Ingredient {Id} into DynamoDB", ingredient.Id);
 
             var ingredientTable = Table.LoadTable(_client, "Ingredients");
 
@@ -77,10 +130,27 @@ namespace RecipeShelf.Data.Proxies
             doc["id"] = (string)ingredient.Id;
             doc["lastModified"] = ingredient.LastModified;
             doc["names"] = ingredient.Names;
+            if (!string.IsNullOrEmpty(ingredient.Description))
+                doc["description"] = ingredient.Description;
             doc["vegan"] = new DynamoDBBool(ingredient.Vegan);
 
             await ingredientTable.PutItemAsync(doc);
-        }        
+        }
+
+        private RecipeItem[] FromDynamoDBList(DynamoDBList list)
+        {
+            var recipeItems = new List<RecipeItem>();
+            foreach (var entry in list.Entries)
+            {
+                var doc = entry.AsDocument();
+                recipeItems.Add(new RecipeItem
+                {
+                    Text = doc["text"].AsString(),
+                    Decorator = (Decorator)Enum.Parse(typeof(Decorator), doc["decorator"].AsString())
+                });
+            }
+            return recipeItems.ToArray();
+        }
 
         private DynamoDBList ToDynamoDBList(RecipeItem[] recipeItems)
         {
@@ -93,7 +163,7 @@ namespace RecipeShelf.Data.Proxies
                 list.Add(item);
             }
             return list;
-        }        
+        }
 
         public void Dispose()
         {

@@ -1,14 +1,17 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using RecipeShelf.Common.Proxies;
 
 namespace RecipeShelf.Common
 {
     public static class Setup
     {
-        public static IServiceCollection AddCommon(this IServiceCollection services)
+        public static IServiceCollection AddCommon(this IServiceCollection services, IConfigurationSection recipeshelfConfiguration)
         {
-            return Settings.FileProxyType == FileProxyTypes.Local ? services.AddSingleton<IFileProxy, LocalFileProxy>() :
-                                                                        services.AddSingleton<IFileProxy, S3FileProxy>();
+            var commonSection = recipeshelfConfiguration.GetSection("Common");
+            services.Configure<CommonSettings>(commonSection);
+            return commonSection.GetValue<FileProxyTypes>("FileProxyType") == FileProxyTypes.Local ? services.AddSingleton<IFileProxy, LocalFileProxy>() :
+                                                                    services.AddSingleton<IFileProxy, S3FileProxy>();
         }
     }
 }

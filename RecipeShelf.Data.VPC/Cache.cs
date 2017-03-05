@@ -1,10 +1,11 @@
 ﻿using RecipeShelf.Data.VPC.Models;
 using RecipeShelf.Data.VPC.Proxies;
-using RecipeShelf.Common;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Microsoft.Extensions.Logging;
+using RecipeShelf.Common;
 
 namespace RecipeShelf.Data.VPC
 {
@@ -56,7 +57,7 @@ namespace RecipeShelf.Data.VPC
 
         protected IEnumerable<string> SearchNames(string sentence)
         {
-            var sw = Stopwatch.StartNew();
+            Logger.LogDebug("Searching names for {Sentence}", sentence);
 
             var ids = new HashSet<string>();
             foreach (var word in sentence.ToLowerCaseWords())
@@ -72,9 +73,7 @@ namespace RecipeShelf.Data.VPC
                     }
                 }
             }           
-
-            Logger.Duration("SearchNames", $"Finding {sentence}", sw);
-
+            
             return ids;
         }
 

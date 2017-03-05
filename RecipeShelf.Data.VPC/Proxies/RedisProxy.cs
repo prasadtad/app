@@ -1,32 +1,36 @@
 ﻿using RecipeShelf.Data.VPC.Models;
-using RecipeShelf.Common;
 using RecipeShelf.Common.Models;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace RecipeShelf.Data.VPC.Proxies
 {
     public sealed class RedisProxy : ICacheProxy
     {
         private readonly ConnectionMultiplexer _redis;
-        private readonly Logger<RedisProxy> _logger = new Logger<RedisProxy>();
+        private readonly ILogger<RedisProxy> _logger;
+        private readonly DataVPCSettings _settings;
 
-        public RedisProxy()
+        public RedisProxy(ILogger<RedisProxy> logger, IOptions<DataVPCSettings> optionsAccessor)
         {
-            _redis = ConnectionMultiplexer.Connect(Settings.CacheEndpoint, Common.Settings.LogLevel == LogLevels.Trace ? Console.Out : null);
+            _logger = logger;
+            _settings = optionsAccessor.Value;
+            _redis = ConnectionMultiplexer.Connect(_settings.CacheEndpoint);
         }
 
         public long Count(string setKey)
         {
-            _logger.Debug("Count", $"Getting count of {setKey}");
+            _logger.LogDebug("Getting count of {SetKey}", setKey);
             var db = _redis.GetDatabase();
             return db.SetLength(setKey);
         }
 
         public string Get(string setKey, string hashField)
         {
-            _logger.Debug("Get", $"Getting {hashField} value from {setKey}");
+            _logger.LogDebug("Getting {HashField} value from {SetKey}", hashField, setKey);
             var value = _redis.GetDatabase().HashGet(setKey, hashField);
             if (value.IsNullOrEmpty) return string.Empty;
             return value;
@@ -34,15 +38,21 @@ namespace RecipeShelf.Data.VPC.Proxies
 
         public bool GetFlag(string setKey, string hashField)
         {
-            _logger.Debug("GetFlag", $"Getting {hashField} flag from {setKey}");
+            _logger.LogDebug("Getting {HashField} flag from {SetKey}", hashField, setKey);
             var value = _redis.GetDatabase().HashGet(setKey, hashField);
             if (value.IsNullOrEmpty) return false;
             return value == Constants.TRUE;
         }
 
+        public string[] HashFields(string setKey)
+        {
+            _logger.LogDebug("Getting {SetKey} hash fields", setKey);
+            return _redis.GetDatabase().HashKeys(setKey).ToStringArray();
+        }
+
         public List<Models.HashEntry> HashScan(string setKey, string hashFieldPattern)
         {
-            _logger.Debug("HashScan", $"Getting {setKey} entries matching {hashFieldPattern}");
+            _logger.LogDebug("Getting {SetKey} entries matching {HashFieldPattern}", setKey, hashFieldPattern);
             var entries = new List<Models.HashEntry>();
             var db = _redis.GetDatabase();
             IScanningCursor cursor = null;
@@ -60,19 +70,19 @@ namespace RecipeShelf.Data.VPC.Proxies
 
         public bool IsMember(string setKey, string value)
         {
-            _logger.Debug("IsMember", $"Checking if {value} is member of {setKey}");
+            _logger.LogDebug("Checking if {Value} is member of {SetKey}", value, setKey);
             return _redis.GetDatabase().SetContains(setKey, value);
         }
 
         public string[] Members(string setKey)
         {
-            _logger.Debug("Members", $"Getting {setKey} members");
+            _logger.LogDebug("Getting {SetKey} members", setKey);
             return _redis.GetDatabase().SetMembers(setKey).ToStringArray();
         }
 
         public string[] RandomMembers(string setKey, int count)
         {
-            _logger.Debug("RandomMembers", $"Getting {count} random members from {setKey}");
+            _logger.LogDebug("Getting {Count} random members from {SetKey}", count, setKey);
             var db = _redis.GetDatabase();
             if (count == 1)
             {
@@ -124,7 +134,7 @@ namespace RecipeShelf.Data.VPC.Proxies
                     count++;
                 }
             }
-            _logger.Debug("Store", $"Executing transaction with {count} commands");
+            _logger.LogDebug("Executing transaction with {Count} commands");
             transaction.Execute();
         }
 
@@ -133,14 +143,14 @@ namespace RecipeShelf.Data.VPC.Proxies
             var keys = new RedisKey[key.SetKeys.Length];
             for (var i = 0; i < keys.Length; i++) keys[i] = key.SetKeys[i];
             var setOp = key.Op == LogicalOperator.And ? SetOperation.Intersect : SetOperation.Union;
-            _logger.Debug("Combine", $"Running {setOp.ToString()} into {key.Destination}");
+            _logger.LogDebug("Running {Operation} into {Destination}", setOp.ToString(), key.Destination);
             _redis.GetDatabase().SetCombineAndStore(setOp, key.Destination, keys);
             return key.Destination;
         }
 
         public bool CanConnect()
         {
-            _logger.Debug("CanConnect", $"Checking if redis is connected");
+            _logger.LogDebug("Checking if redis is connected");
             return _redis.IsConnected;
         }
     }

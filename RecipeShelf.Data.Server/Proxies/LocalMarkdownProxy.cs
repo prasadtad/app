@@ -1,76 +1,63 @@
 ﻿using System.Threading.Tasks;
 using RecipeShelf.Common.Models;
-using RecipeShelf.Common;
 using System.IO;
 using System.Diagnostics;
-using System;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace RecipeShelf.Data.Server.Proxies
 {
     public sealed class LocalMarkdownProxy : IMarkdownProxy
     {
-        private readonly Logger<LocalMarkdownProxy> _logger = new Logger<LocalMarkdownProxy>();
+        private readonly ILogger<LocalMarkdownProxy> _logger;
+
+        private readonly DataServerSettings _settings;
+
+        public LocalMarkdownProxy(ILogger<LocalMarkdownProxy> logger, IOptions<DataServerSettings> optionsAccessor)
+        {
+            _logger = logger;
+            _settings = optionsAccessor.Value;
+        }
 
         public bool CanConnect()
         {
-            _logger.Debug("CanConnect", $"Checking if recipe markdown folder exists");
-            return Directory.Exists(Settings.MarkdownFolder);
+            _logger.LogDebug("Checking if {MarkdownRoot} and {MarkdownFolder} folders exist", _settings.MarkdownRoot, _settings.MarkdownFolder);
+            return Directory.Exists(_settings.MarkdownRoot) && Directory.Exists(_settings.MarkdownFolder);
         }
 
         public async Task PutRecipeMarkdownAsync(Recipe recipe)
         {
-            var markdownFile = Path.Combine(Settings.MarkdownFolder, recipe.Id + ".md");
+            var markdownFile = Path.Combine(_settings.MarkdownFolder, recipe.Id + ".md");
             var markdownFileExists = File.Exists(markdownFile);
-            if (Settings.CommitAndPush)
-            {
-                _logger.Debug("PutRecipe", $"Checking if recipe folder exists");
-                if (!Directory.Exists(Settings.MarkdownRoot))
-                    throw new Exception($"{Settings.MarkdownRoot} does not exist. Setup a git repository for the website there.");
-                if (!Directory.Exists(Settings.MarkdownFolder))
-                    throw new Exception($"{Settings.MarkdownFolder} does not exist. The website should contain a folder to storing recipe markdown.");
-            }
-            _logger.Debug("PutRecipe", $"Generating markdown for {recipe.Id}");
+            _logger.LogDebug("Generating markdown for Recipe {Id}", recipe.Id);
             var markdown = recipe.GenerateMarkdown();
-            _logger.Debug("PutRecipe", $"Saving markdown file {markdownFile}");
+            _logger.LogDebug("Saving markdown file {markdownFile} for Recipe {Id}", markdownFile, recipe.Id);
             using (var writer = File.CreateText(markdownFile))
                 await writer.WriteAsync(markdown);
-            if (Settings.CommitAndPush)
+            if (_settings.CommitAndPush)
             {
                 if (markdownFileExists)
-                {
-                    Process.Start(new ProcessStartInfo
-                    {
-                        UseShellExecute = false,
-                        WorkingDirectory = Settings.MarkdownFolder,
-                        FileName = "git",
-                        Arguments = $"commit -am \"Updated {recipe.Names[0]} recipe\""
-                    });
-                }
+                    RunGit($"commit -am \"Updated {recipe.Names[0]} recipe\"");
                 else
                 {
-                    Process.Start(new ProcessStartInfo
-                    {
-                        UseShellExecute = false,
-                        WorkingDirectory = Settings.MarkdownFolder,
-                        FileName = "git",
-                        Arguments = $"add \"{markdownFile}\""
-                    });
-                    Process.Start(new ProcessStartInfo
-                    {
-                        UseShellExecute = false,
-                        WorkingDirectory = Settings.MarkdownFolder,
-                        FileName = "git",
-                        Arguments = $"commit -m \"Added {recipe.Names[0]} recipe\""
-                    });
+                    RunGit($"add \"{markdownFile}\"");
+                    RunGit($"commit -m \"Added {recipe.Names[0]} recipe\"");
                 }
-                Process.Start(new ProcessStartInfo
-                {
-                    UseShellExecute = false,
-                    WorkingDirectory = Settings.MarkdownRoot,
-                    FileName = "git",
-                    Arguments = "push"
-                });
+                RunGit("push");
             }
+        }
+
+        private void RunGit(string args)
+        {
+            var processStartInfo = new ProcessStartInfo
+            {
+                UseShellExecute = false,
+                WorkingDirectory = _settings.MarkdownFolder,
+                FileName = "git",
+                Arguments = args
+            };
+            _logger.LogDebug("Starting {Process}", processStartInfo.FileName + " " + processStartInfo.Arguments);
+            Process.Start(processStartInfo);
         }
     }
 }
