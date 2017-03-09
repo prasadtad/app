@@ -55,7 +55,7 @@ namespace RecipeShelf.Data.VPC
             return entries;
         }
 
-        protected IEnumerable<string> SearchNames(string sentence)
+        public IEnumerable<string> SearchNames(string sentence)
         {
             Logger.LogDebug("Searching names for {Sentence}", sentence);
 

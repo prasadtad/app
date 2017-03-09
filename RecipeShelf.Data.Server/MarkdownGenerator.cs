@@ -26,7 +26,7 @@ namespace RecipeShelf.Data.Server
             AppendValue(sb, "overnight_preparation", recipe.OvernightPreparation ? 1 : 0);
             AppendValue(sb, "ingredients_count", recipe.IngredientIds.Length);
             if (recipe.AccompanimentIds != null && recipe.AccompanimentIds.Length > 0)
-                AppendArray(sb, "accompaniment_ids", recipe.AccompanimentIds.ToStrings());
+                AppendArray(sb, "accompaniment_ids", recipe.AccompanimentIds);
             AppendIngredientsHtml(sb, recipe.Ingredients);
             AppendStepsHtml(sb, recipe.Steps);
             sb.AppendLine("+++");

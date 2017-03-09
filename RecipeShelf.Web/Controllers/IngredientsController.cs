@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RecipeShelf.Common.Proxies;
 using RecipeShelf.Data.Proxies;
 using RecipeShelf.Data.VPC;
@@ -9,61 +8,88 @@ using Newtonsoft.Json;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using RecipeShelf.Common;
+using System;
 
 namespace RecipeShelf.Web.Controllers
 {
-    [Route("api/[controller]")]
-    public class IngredientsController : Controller
+    public class IngredientsController : BaseController
     {
-        private readonly ILogger<IngredientsController> _logger;
-        private readonly IFileProxy _fileProxy;
-        private readonly INoSqlDbProxy _noSqlDbProxy;
         private readonly IngredientCache _ingredientCache;
 
-        public IngredientsController(ILogger<IngredientsController> logger, IFileProxy fileProxy, INoSqlDbProxy noSqlDbProxy, IngredientCache ingredientCache)
+        public IngredientsController(ILogger<IngredientsController> logger, IFileProxy fileProxy, INoSqlDbProxy noSqlDbProxy, IngredientCache ingredientCache) : base(logger, fileProxy, noSqlDbProxy)
         {
-            _logger = logger;
-            _fileProxy = fileProxy;
-            _noSqlDbProxy = noSqlDbProxy;
             _ingredientCache = ingredientCache;
         }
 
         // GET api/ingredients
         [HttpGet]
-        public IEnumerable<string> Get()
+        public IActionResult Get()
         {
-            return _ingredientCache.All();
+            return JsonWithExceptionLogging(_ingredientCache.All);
         }
 
         // GET api/ingredients/5
         [HttpGet("{id}")]
-        public async Task<Ingredient> Get(string id)
+        public async Task<IActionResult> Get(string id)
         {
-            return await _noSqlDbProxy.GetIngredientAsync(id);
+            return await JsonWithExceptionLoggingAsync(() => NoSqlDbProxy.GetIngredientAsync(id));
         }
 
         // POST api/values
         [HttpPost]
-        public void Post([FromBody]string value)
+        public async Task<IActionResult> Post([FromBody]string value)
         {
+            return await JsonWithExceptionLoggingAsync(async () =>
+            {
+                var ingredient = JsonConvert.DeserializeObject<Ingredient>(value);
+                ingredient.Id = Helper.GenerateNewId();
+                await FileProxy.PutTextAsync("ingredients/" + ingredient.Id, value);
+                await NoSqlDbProxy.PutIngredientAsync(ingredient);
+                _ingredientCache.Store(ingredient);
+                return ingredient.Id;
+            });
         }
 
         // PUT api/values/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
+        public async Task<IActionResult> Put(string id, [FromBody]Ingredient value)
         {
+            if (string.IsNullOrEmpty(id)) return BadRequest("Invalid id -" + id);
+            if (ingredient.Id != id) return BadRequest("Ingredient id - " + ingredient.Id + " does not match id - " + id);
+            Ingredient oldIngredient = null;
+            try
+            {
+                oldIngredient = await NoSqlDbProxy.GetIngredientAsync(id);
+            }
+            catch (Exception ex)
+            {
+                return DefaultExceptionHandler(ex);
+            }
+            return await JsonWithExceptionLoggingAsync(async () =>
+            {
+                await FileProxy.PutTextAsync("ingredients/" + ingredient.Id, value);
+                await NoSqlDbProxy.PutIngredientAsync(ingredient);
+                _ingredientCache.Store(ingredient);
+                return ingredient.Id;
+            });
         }
 
         // DELETE api/values/5
         [HttpDelete("{id}")]
         public void Delete(int id)
         {
+            var msg = await CheckBeforeSave();
+            if (!string.IsNullOrEmpty(msg)) return msg;
         }
 
         [HttpGet("Update")]
-        public async Task<string> Update([FromQuery] bool cache, [FromQuery] bool noSql)
+        public async Task<IActionResult> Update([FromQuery] bool cache, [FromQuery] bool noSql)
         {
-            if (!cache && !noSql) return "Didn't update anything";
+            if (!cache && !noSql) return BadRequest("Didn't specify what to update - cache or noSql?");
+
+            var result = await CheckBeforeSave();
+            if (result != null) return result;
+
             Stopwatch sw = Stopwatch.StartNew();
             foreach (var key in await _fileProxy.ListKeysAsync("ingredients"))
             {
@@ -72,10 +98,10 @@ namespace RecipeShelf.Web.Controllers
                 if (cache) _ingredientCache.Store(ingredient);
             }
             if (cache && noSql)
-                return "Updating cache and no sql took " + sw.Elapsed.Describe();
+                return Ok("Updating cache and no sql took " + sw.Elapsed.Describe());
             else if (cache)
-                return "Updating cache took " + sw.Elapsed.Describe();
-            return "Updating no sql took " + sw.Elapsed.Describe();
+                return Ok("Updating cache took " + sw.Elapsed.Describe());
+            return Ok("Updating no sql took " + sw.Elapsed.Describe());
         }
     }
 }

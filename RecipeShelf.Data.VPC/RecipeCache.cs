@@ -20,9 +20,9 @@ namespace RecipeShelf.Data.VPC
             _ingredientCache = ingredientCache;
         }
 
-        public IEnumerable<RecipeId> ByChef(string chefId) => CacheProxy.Members(KeyRegistry.Recipes.ChefId.Append(chefId)).Cast<RecipeId>();
+        public string[] ByChef(string chefId) => CacheProxy.Members(KeyRegistry.Recipes.ChefId.Append(chefId));
 
-        public IEnumerable<RecipeId> ByFilter(RecipeFilter filter)
+        public string[] ByFilter(RecipeFilter filter)
         {
             var keys = new List<string>();
             if (filter.Vegan != null) keys.Add(KeyRegistry.Recipes.Vegan.Append(filter.Vegan.Value));
@@ -33,16 +33,11 @@ namespace RecipeShelf.Data.VPC
             if (filter.SpiceLevels != null && filter.SpiceLevels.Length > 0) keys.Add(CacheProxy.Combine(new CombineOptions(LogicalOperator.Or, KeyRegistry.Recipes.SpiceLevel, filter.SpiceLevels.ToStrings())));
             if (filter.TotalTimes != null && filter.TotalTimes.Length > 0) keys.Add(CacheProxy.Combine(new CombineOptions(LogicalOperator.Or, KeyRegistry.Recipes.TotalTime, filter.TotalTimes.ToStrings())));
             if (filter.Collections != null && filter.Collections.Length > 0) keys.Add(CacheProxy.Combine(new CombineOptions(LogicalOperator.Or, KeyRegistry.Recipes.Collection, filter.Collections)));
-            if (keys.Count == 0) return new RecipeId[0];
-            return CacheProxy.Members(CacheProxy.Combine(new CombineOptions(LogicalOperator.And, keys.ToArray()))).Cast<RecipeId>();
+            if (keys.Count == 0) return new string[0];
+            return CacheProxy.Members(CacheProxy.Combine(new CombineOptions(LogicalOperator.And, keys.ToArray())));
         }
 
-        public IEnumerable<RecipeId> Search(string sentence)
-        {
-            return SearchNames(sentence).Cast<RecipeId>();
-        }
-
-        public bool IsVegan(RecipeId id) => CacheProxy.IsMember(KeyRegistry.Recipes.Vegan.Append(true), id);
+        public bool IsVegan(string id) => CacheProxy.IsMember(KeyRegistry.Recipes.Vegan.Append(true), id);
 
         public string[] GetChefs() => CacheProxy.Members(KeyRegistry.Recipes.ChefId);
 
@@ -79,7 +74,7 @@ namespace RecipeShelf.Data.VPC
             }
             batch.Add(new SetEntry(KeyRegistry.Recipes.Vegan, vegan, recipe.Id));
 
-            batch.Add(new SetEntry(KeyRegistry.Recipes.IngredientId, recipe.IngredientIds.ToStrings(), recipe.Id));
+            batch.Add(new SetEntry(KeyRegistry.Recipes.IngredientId, recipe.IngredientIds, recipe.Id));
 
             batch.Add(new SetEntry(KeyRegistry.Recipes.OvernightPreparation, recipe.OvernightPreparation, recipe.Id));
 

@@ -26,7 +26,14 @@ namespace RecipeShelf.Data.VPC.Models
             SetKey = setKey;
             HashField = hashField;
             Value = value ? Constants.TRUE : Constants.FALSE;
-        }      
+        }
+
+        public HashEntry(string setKey, string hashField)
+        {
+            SetKey = setKey;
+            HashField = hashField;
+            Value = null;
+        }
     }
 
     public struct SetEntry : IEntry
@@ -56,6 +63,13 @@ namespace RecipeShelf.Data.VPC.Models
         {
             SetPrefix = setPrefix;
             SortedSetNames = new string[] { name ? Constants.TRUE : Constants.FALSE };
+            Value = value;
+        }
+
+        public SetEntry(string setPrefix, string value)
+        {
+            SetPrefix = setPrefix;
+            SortedSetNames = null;
             Value = value;
         }
     }

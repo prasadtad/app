@@ -1,5 +1,4 @@
-﻿using RecipeShelf.Common.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace RecipeShelf.Common
@@ -21,22 +20,6 @@ namespace RecipeShelf.Common
             for (var i = 0; i < values.Length; i++)
                 values[i] = enumValues[i].ToString();
             return values;
-        }
-
-        public static string[] ToStrings(this RecipeId[] values)
-        {
-            var strings = new string[values.Length];
-            for (var i = 0; i < values.Length; i++)
-                strings[i] = values[i];
-            return strings;
-        }
-
-        public static string[] ToStrings(this IngredientId[] values)
-        {
-            var strings = new string[values.Length];
-            for (var i = 0; i < values.Length; i++)
-                strings[i] = values[i];
-            return strings;
         }
 
         /// <see cref="http://csharpindepth.com/ViewNote.aspx?NoteID=186"/>

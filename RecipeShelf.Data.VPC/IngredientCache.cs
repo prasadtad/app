@@ -20,9 +20,9 @@ namespace RecipeShelf.Data.VPC
 
         public string[] GetCategories() => CacheProxy.Members(KeyRegistry.Ingredients.Category);
 
-        public IEnumerable<IngredientId> ByCategory(string category) => CacheProxy.Members(KeyRegistry.Ingredients.Category.Append(category)).Cast<IngredientId>();
+        public string[] ByCategory(string category) => CacheProxy.Members(KeyRegistry.Ingredients.Category.Append(category));
 
-        public bool IsVegan(IngredientId id) => CacheProxy.GetFlag(KeyRegistry.Ingredients.Vegan, id);
+        public bool IsVegan(string id) => CacheProxy.GetFlag(KeyRegistry.Ingredients.Vegan, id);
 
         public void Store(Ingredient ingredient)
         {
@@ -57,12 +57,28 @@ namespace RecipeShelf.Data.VPC
 
             batch.AddRange(CreateSearchWordEntries(ingredient.Id, oldNames, ingredient.Names));
 
-            CacheProxy.Store(batch);            
+            CacheProxy.Store(batch);
         }
 
-        public IEnumerable<IngredientId> Search(string sentence)
+        public void Remove(string id)
         {
-            return SearchNames(sentence).Cast<IngredientId>();
+            Logger.LogDebug("Removing Ingredient {Id} from cache", id);
+
+            var oldNames = CacheProxy.Get(KeyRegistry.Ingredients.Names, id);
+
+            var batch = new List<IEntry>();
+
+            batch.Add(new HashEntry(KeyRegistry.Ingredients.Names, id));
+
+            batch.Add(new SetEntry(KeyRegistry.Recipes.Vegan, id));
+
+            batch.Add(new SetEntry(KeyRegistry.Ingredients.Category, id));
+
+            batch.Add(new HashEntry(KeyRegistry.Ingredients.Vegan, id));
+
+            batch.AddRange(CreateSearchWordEntries(id, oldNames, new string[0]));
+
+            CacheProxy.Store(batch);
         }
     }
 }

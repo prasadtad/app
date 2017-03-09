@@ -103,25 +103,31 @@ namespace RecipeShelf.Data.VPC.Proxies
                 if (entry is SetEntry)
                 {
                     var setEntry = (SetEntry)entry;
-                    foreach (var setName in setEntry.SortedSetNames)
+                    if (setEntry.SortedSetNames != null)
                     {
-                        if (string.IsNullOrEmpty(setName)) continue;
-                        transaction.SetAddAsync(setEntry.SetPrefix, setName);
-                        count++;
+                        foreach (var setName in setEntry.SortedSetNames)
+                        {
+                            if (string.IsNullOrEmpty(setName)) continue;
+                            transaction.SetAddAsync(setEntry.SetPrefix, setName);
+                            count++;
+                        }
                     }
                     foreach (var setName in Members(setEntry.SetPrefix))
                     {
-                        if (Array.BinarySearch(setEntry.SortedSetNames, setName) < 0)
+                        if (setEntry.SortedSetNames == null || Array.BinarySearch(setEntry.SortedSetNames, setName) < 0)
                         {
                             transaction.SetRemoveAsync(setEntry.SetPrefix.Append(setName), setEntry.Value);
                             count++;
                         }
                     }
-                    foreach (var setName in setEntry.SortedSetNames)
+                    if (setEntry.SortedSetNames != null)
                     {
-                        if (string.IsNullOrEmpty(setName)) continue;
-                        transaction.SetAddAsync(setEntry.SetPrefix.Append(setName), setEntry.Value);
-                        count++;
+                        foreach (var setName in setEntry.SortedSetNames)
+                        {
+                            if (string.IsNullOrEmpty(setName)) continue;
+                            transaction.SetAddAsync(setEntry.SetPrefix.Append(setName), setEntry.Value);
+                            count++;
+                        }
                     }
                 }
                 else

@@ -11,6 +11,8 @@ namespace RecipeShelf.Common.Proxies
 
         Task<string> GetTextAsync(string key);
 
-        Task PutTextAsync(string key, string text);        
+        Task PutTextAsync(string key, string text);
+
+        Task DeleteAsync(string key);      
     }
 }

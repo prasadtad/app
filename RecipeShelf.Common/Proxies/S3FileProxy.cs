@@ -28,6 +28,12 @@ namespace RecipeShelf.Common.Proxies
             return _transferUtility.S3Client.DoesS3BucketExistAsync(_settings.S3FileProxyBucket);
         }
 
+        public async Task DeleteAsync(string key)
+        {
+            _logger.LogDebug("Deleting {Key}", key);
+            await _transferUtility.S3Client.DeleteObjectAsync(_settings.S3FileProxyBucket, key);
+        }
+
         public async Task<IEnumerable<string>> ListKeysAsync(string folder)
         {
             _logger.LogDebug("Listing keys in {Folder}", folder);

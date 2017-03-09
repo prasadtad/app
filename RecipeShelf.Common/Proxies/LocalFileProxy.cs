@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -21,6 +22,13 @@ namespace RecipeShelf.Common.Proxies
         {
             _logger.LogDebug("Checking if {Folder} exists", _settings.LocalFileProxyFolder);
             return Task.FromResult(Directory.Exists(_settings.LocalFileProxyFolder));
+        }
+
+        public Task DeleteAsync(string filename)
+        {
+            _logger.LogDebug("Deleting {Filename}", filename);
+            File.Delete(Path.Combine(_settings.LocalFileProxyFolder, filename));
+            return Task.CompletedTask;
         }
 
         public async Task<string> GetTextAsync(string filename)
