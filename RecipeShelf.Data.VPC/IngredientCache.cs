@@ -3,26 +3,27 @@ using RecipeShelf.Data.VPC.Proxies;
 using RecipeShelf.Common.Models;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Extensions.Logging;
 
 namespace RecipeShelf.Data.VPC
 {
     public sealed class IngredientCache : Cache
     {
+        public override string Table => "Ingredients";
+
+        protected override string NamesKey => KeyRegistry.Ingredients.Names;
+
         protected override string SearchWordsKey => KeyRegistry.Ingredients.SearchWords;
 
         public IngredientCache(ICacheProxy cacheProxy, ILogger<IngredientCache> logger) : base(cacheProxy, logger)
         {
         }
 
-        public string[] All() => CacheProxy.HashFields(KeyRegistry.Ingredients.Names);
-
         public string[] GetCategories() => CacheProxy.Members(KeyRegistry.Ingredients.Category);
 
         public string[] ByCategory(string category) => CacheProxy.Members(KeyRegistry.Ingredients.Category.Append(category));
 
-        public bool IsVegan(string id) => CacheProxy.GetFlag(KeyRegistry.Ingredients.Vegan, id);
+        public override bool IsVegan(string id) => CacheProxy.GetFlag(KeyRegistry.Ingredients.Vegan, id);
 
         public void Store(Ingredient ingredient)
         {

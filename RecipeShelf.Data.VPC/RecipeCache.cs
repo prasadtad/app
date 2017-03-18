@@ -4,14 +4,17 @@ using RecipeShelf.Common;
 using RecipeShelf.Common.Models;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Extensions.Logging;
 
 namespace RecipeShelf.Data.VPC
 {
     public sealed class RecipeCache : Cache
     {
+        public override string Table => "Recipes";
+
         private IngredientCache _ingredientCache;
+
+        protected override string NamesKey => KeyRegistry.Recipes.Names;
 
         protected override string SearchWordsKey => KeyRegistry.Recipes.SearchWords;
 
@@ -37,7 +40,7 @@ namespace RecipeShelf.Data.VPC
             return CacheProxy.Members(CacheProxy.Combine(new CombineOptions(LogicalOperator.And, keys.ToArray())));
         }
 
-        public bool IsVegan(string id) => CacheProxy.IsMember(KeyRegistry.Recipes.Vegan.Append(true), id);
+        public override bool IsVegan(string id) => CacheProxy.IsMember(KeyRegistry.Recipes.Vegan.Append(true), id);
 
         public string[] GetChefs() => CacheProxy.Members(KeyRegistry.Recipes.ChefId);
 

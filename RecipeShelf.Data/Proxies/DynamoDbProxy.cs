@@ -107,8 +107,7 @@ namespace RecipeShelf.Data.Proxies
             _logger.LogDebug("Getting Ingredient {Id} from DynamoDB", id);
 
             var ingredientTable = Table.LoadTable(_client, "Ingredients");
-            var doc = await ingredientTable.GetItemAsync(new Primitive(id));
-
+            var doc = await ingredientTable.GetItemAsync(new Primitive(id));            
             var ingredient = new Ingredient { Id = id };
             ingredient.LastModified = doc["lastModified"].AsDateTime();
             ingredient.Names = doc["names"].AsArrayOfString();

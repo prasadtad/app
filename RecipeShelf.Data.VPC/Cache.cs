@@ -2,15 +2,17 @@
 using RecipeShelf.Data.VPC.Proxies;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using Microsoft.Extensions.Logging;
-using RecipeShelf.Common;
 
 namespace RecipeShelf.Data.VPC
 {
     public abstract class Cache
     {
+        public abstract string Table { get; }
+
+        protected abstract string NamesKey { get; }
+
         protected abstract string SearchWordsKey { get; }
 
         protected readonly ICacheProxy CacheProxy;
@@ -27,6 +29,10 @@ namespace RecipeShelf.Data.VPC
         {
             return CacheProxy.CanConnect();
         }
+
+        public string[] All() => CacheProxy.HashFields(NamesKey);
+
+        public abstract bool IsVegan(string id);
 
         protected IEnumerable<IEntry> CreateSearchWordEntries(string id, string oldNames, string[] names)
         {

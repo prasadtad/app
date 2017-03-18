@@ -4,145 +4,71 @@ using RecipeShelf.Common;
 using RecipeShelf.Common.Models;
 using RecipeShelf.Common.Proxies;
 using RecipeShelf.Data.Proxies;
+using RecipeShelf.Data.Server.Proxies;
 using RecipeShelf.Data.VPC;
-using RecipeShelf.Web;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
-namespace RecipeShelf.Site
+namespace RecipeShelf.Web
 {
-    public interface IIngredientRepository
+    public interface IIngredientRepository : IRepository
     {
-        AllResponse All();
+        Task<RepositoryResponse<Ingredient>> GetAsync(string id);
 
-        Task<Ingredient> GetAsync(string id);
+        Task<RepositoryResponse<string>> CreateAsync(Ingredient ingredient);
 
-        Task<CreateResponse> CreateAsync(Ingredient ingredient);
-
-        Task<string> UpdateAsync(string id, Ingredient ingredient);
-
-        Task<string> DeleteAsync(string id);
+        Task<RepositoryResponse<bool>> UpdateAsync(string id, Ingredient ingredient);
     }
 
-    public class IngredientRepository : IIngredientRepository
+    public class IngredientRepository : Repository, IIngredientRepository
     {
-        private readonly IngredientCache _ingredientCache;
-        private readonly ILogger _logger;
-        private readonly IFileProxy _fileProxy;
-        private readonly INoSqlDbProxy _noSqlDbProxy;
+        private IngredientCache IngredientCache { get { return (IngredientCache)Cache; } }
 
-        protected IngredientRepository(ILogger logger, IFileProxy fileProxy, INoSqlDbProxy noSqlDbProxy, IngredientCache ingredientCache)
+        public IngredientRepository(ILogger logger, IFileProxy fileProxy, INoSqlDbProxy noSqlDbProxy, IMarkdownProxy markdownProxy, IngredientCache ingredientCache) :
+            base(logger, fileProxy, noSqlDbProxy, markdownProxy, ingredientCache)
         {
-            _logger = logger;
-            _fileProxy = fileProxy;
-            _noSqlDbProxy = noSqlDbProxy;
-            _ingredientCache = ingredientCache;
         }
 
-        public AllResponse All()
+        public Task<RepositoryResponse<Ingredient>> GetAsync(string id)
         {
-            const string Error = "Cannot get all ingredients";
-            if (!_ingredientCache.CanConnect())
-            {
-                _logger.LogError("Cannot connect to cache");
-                return new AllResponse(Error);
-            }
-            try
-            {
-                return new AllResponse(_ingredientCache.All());
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.Message + " - {StackTrace}", ex.StackTrace);
-                return new AllResponse(Error);
-            }
+            return ExecuteAsync(() => NoSqlDbProxy.GetIngredientAsync(id), "Cannot get Ingredient " + id, Sources.NoSql);
         }
 
-        public async Task<CreateResponse> CreateAsync(Ingredient ingredient)
+        public Task<RepositoryResponse<string>> CreateAsync(Ingredient ingredient)
         {
-            const string Error = "Cannot create ingredient";
-            if (!await _fileProxy.CanConnectAsync())
+            return ExecuteAsync(async () =>
             {
-                _logger.LogError("Cannot connect to Files");
-                return new CreateResponse(Error);
-            }
-            if (!await _noSqlDbProxy.CanConnectAsync())
-            {
-                _logger.LogError("Cannot connect to NoSql");
-                return new CreateResponse(Error);
-            }
-            if (!_ingredientCache.CanConnect())
-            {
-                _logger.LogError("Cannot connect to cache");
-                return new CreateResponse(Error);
-            }
-            ingredient.Id = Helper.GenerateNewId();
-            if (!Update(ingredient)) return new CreateResponse(Error);
-            return new CreateResponse(null, ingredient.Id);
+                ingredient.Id = Helper.GenerateNewId();
+                await PutAsync(ingredient);
+                return ingredient.Id;
+            }, "Cannot create new Ingredient", Sources.All);
         }
 
-        public async Task<bool> Delete(string id)
+        public Task<RepositoryResponse<bool>> UpdateAsync(string id, Ingredient ingredient)
         {
-            try
-            {
-                _ingredientCache.Remove(id);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.Message + " - {StackTrace}", ex.StackTrace);
-                return false;
-            }
-            try
-            {
-                _noSqlDbProxy.DeleteIngredientAsync(id);
-            }
+            if (id != ingredient.Id)
+                return Task.FromResult(new RepositoryResponse<bool>(error: "Id " + id + " mismatch"));
+            return ExecuteAsync(async () =>
+            {                
+                await PutAsync(ingredient);
+                return true;
+            }, "Cannot update Ingredient " + id, Sources.All);
         }
 
-        public void Execute()
+        private async Task PutAsync(Ingredient ingredient)
         {
-            var ingredient = JsonConvert.DeserializeObject<Ingredient>(value);
-            ingredient.Id = Helper.GenerateNewId();
-            await FileProxy.PutTextAsync("ingredients/" + ingredient.Id, value);
+            var oldJson = await NoSqlDbProxy.GetIngredientAsync(ingredient.Id);
+
+            var json = JsonConvert.SerializeObject(ingredient, Formatting.Indented);
+            await FileProxy.PutTextAsync("ingredients/" + ingredient.Id, json);
             await NoSqlDbProxy.PutIngredientAsync(ingredient);
-            _ingredientCache.Store(ingredient);
-            return ingredient.Id;
+            IngredientCache.Store(ingredient);
+
         }
 
-        public Task<Ingredient> Get(string id)
+        protected override Task<bool> TryDeleteAsync(string id)
         {
             throw new NotImplementedException();
-        }
-
-        public void Update(string id, Ingredient ingredient)
-        {
-
-        }
-
-        private bool Update(Ingredient ingredient)
-        {
-            try
-            {
-                await _fileProxy.PutTextAsync("ingredients/" + ingredient.Id, JsonConvert.SerializeObject(ingredient, Formatting.Indented));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.Message + " - {StackTrace}", ex.StackTrace);
-                return new CreateResponse(Error);
-            }
-            try
-            {
-                await _noSqlDbProxy.PutIngredientAsync(ingredient);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.Message + " - {StackTrace}", ex.StackTrace);
-                return new CreateResponse(Error);
-            }
-
-            _ingredientCache.Store(ingredient);
-            return ingredient.Id;
         }
     }
 }
