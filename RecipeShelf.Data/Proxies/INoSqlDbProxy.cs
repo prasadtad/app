@@ -13,6 +13,10 @@ namespace RecipeShelf.Data.Proxies
 
         Task<Ingredient> GetIngredientAsync(string id);
 
+        Task DeleteIngredientAsync(string id);
+
+        Task DeleteRecipeAsync(string id);
+
         Task<bool> CanConnectAsync();
     }
 }

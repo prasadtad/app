@@ -44,7 +44,7 @@ namespace RecipeShelf.Web
             return ExecuteAsync(() => TryDeleteAsync(id), "Cannot delete " + Cache.Table + " " + id, Sources.All);
         }
 
-        protected abstract Task<bool> TryDeleteAsync(string id);
+        protected abstract Task<RepositoryResponse<bool>> TryDeleteAsync(string id);
 
         protected Task<RepositoryResponse<T>> ExecuteAsync<T>(Func<T> func, string error, Sources sources)
         {
@@ -54,6 +54,16 @@ namespace RecipeShelf.Web
         protected Task<RepositoryResponse<T>> ExecuteAsync<T>(Func<Task<T>> func, string error, Sources sources)
         {
             return ExecuteAsync(new Lazy<Task<T>>(func), error, sources);
+        }
+
+        protected Task<RepositoryResponse<T>> ExecuteAsync<T>(Func<RepositoryResponse<T>> func, string error, Sources sources)
+        {
+            return ExecuteAsync(new Lazy<RepositoryResponse<T>>(func), error, sources);
+        }
+
+        protected Task<RepositoryResponse<T>> ExecuteAsync<T>(Func<Task<RepositoryResponse<T>>> func, string error, Sources sources)
+        {
+            return ExecuteAsync(new Lazy<Task<RepositoryResponse<T>>>(func), error, sources);
         }
 
         protected async Task<RepositoryResponse<T>> ExecuteAsync<T>(Lazy<Task<T>> data, string error, Sources sources)
@@ -70,6 +80,20 @@ namespace RecipeShelf.Web
             }
         }
 
+        protected async Task<RepositoryResponse<T>> ExecuteAsync<T>(Lazy<Task<RepositoryResponse<T>>> data, string error, Sources sources)
+        {
+            var connectError = await CanConnectAsync(error, sources);
+            if (!string.IsNullOrEmpty(connectError)) return new RepositoryResponse<T>(error: connectError);
+            try
+            {
+                return await data.Value;
+            }
+            catch (Exception ex)
+            {
+                return DefaultExceptionHandler<T>(ex, error);
+            }
+        }
+
         protected async Task<RepositoryResponse<T>> ExecuteAsync<T>(Lazy<T> data, string error, Sources sources)
         {
             var connectError = await CanConnectAsync(error, sources);
@@ -77,6 +101,20 @@ namespace RecipeShelf.Web
             try
             {
                 return new RepositoryResponse<T>(response: data.Value);
+            }
+            catch (Exception ex)
+            {
+                return DefaultExceptionHandler<T>(ex, error);
+            }
+        }
+
+        protected async Task<RepositoryResponse<T>> ExecuteAsync<T>(Lazy<RepositoryResponse<T>> data, string error, Sources sources)
+        {
+            var connectError = await CanConnectAsync(error, sources);
+            if (!string.IsNullOrEmpty(connectError)) return new RepositoryResponse<T>(error: connectError);
+            try
+            {
+                return data.Value;
             }
             catch (Exception ex)
             {
@@ -109,7 +147,7 @@ namespace RecipeShelf.Web
             return string.Empty;
         }
 
-        private RepositoryResponse<T> DefaultExceptionHandler<T>(Exception ex, string error)
+        protected RepositoryResponse<T> DefaultExceptionHandler<T>(Exception ex, string error)
         {
             Logger.LogCritical(ex.Message + " - {StackTrace}", ex.StackTrace);
             return new RepositoryResponse<T>(error: error);

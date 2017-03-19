@@ -31,7 +31,11 @@ namespace RecipeShelf.Web
 
         public Task<RepositoryResponse<Ingredient>> GetAsync(string id)
         {
-            return ExecuteAsync(() => NoSqlDbProxy.GetIngredientAsync(id), "Cannot get Ingredient " + id, Sources.NoSql);
+            return ExecuteAsync(async () =>
+            {
+                if (!Cache.Exists(id)) return new RepositoryResponse<Ingredient>(error: "Ingredient " + id + " does not exist");
+                return new RepositoryResponse<Ingredient>(await NoSqlDbProxy.GetIngredientAsync(id));
+            }, "Cannot get Ingredient " + id, Sources.Cache | Sources.NoSql);
         }
 
         public Task<RepositoryResponse<string>> CreateAsync(Ingredient ingredient)
@@ -39,6 +43,8 @@ namespace RecipeShelf.Web
             return ExecuteAsync(async () =>
             {
                 ingredient.Id = Helper.GenerateNewId();
+                // To avoid the horrors of duplicate ids at all costs
+                while (Cache.Exists(ingredient.Id)) ingredient.Id = Helper.GenerateNewId();
                 await PutAsync(ingredient);
                 return ingredient.Id;
             }, "Cannot create new Ingredient", Sources.All);
@@ -49,26 +55,80 @@ namespace RecipeShelf.Web
             if (id != ingredient.Id)
                 return Task.FromResult(new RepositoryResponse<bool>(error: "Id " + id + " mismatch"));
             return ExecuteAsync(async () =>
-            {                
-                await PutAsync(ingredient);
-                return true;
+            {
+                if (!Cache.Exists(id)) return new RepositoryResponse<bool>(error: "Ingredient " + id + " does not exist");
+                await PutAsync(ingredient, await NoSqlDbProxy.GetIngredientAsync(id));
+                return new RepositoryResponse<bool>(response: true);
             }, "Cannot update Ingredient " + id, Sources.All);
         }
-
-        private async Task PutAsync(Ingredient ingredient)
+        
+        protected async override Task<RepositoryResponse<bool>> TryDeleteAsync(string id)
         {
-            var oldJson = await NoSqlDbProxy.GetIngredientAsync(ingredient.Id);
-
-            var json = JsonConvert.SerializeObject(ingredient, Formatting.Indented);
-            await FileProxy.PutTextAsync("ingredients/" + ingredient.Id, json);
-            await NoSqlDbProxy.PutIngredientAsync(ingredient);
-            IngredientCache.Store(ingredient);
-
+            if (!Cache.Exists(id)) return new RepositoryResponse<bool>(error: "Ingredient " + id + " does not exist");
+            Ingredient oldIngredient = await NoSqlDbProxy.GetIngredientAsync(id);
+            var key = "ingredients/" + id;
+            await FileProxy.DeleteAsync(key);
+            try
+            {
+                await NoSqlDbProxy.DeleteIngredientAsync(id);
+            }
+            catch (Exception)   // Rollback file
+            {
+                await RollbackFileProxy(key, oldIngredient);
+                throw;
+            }
+            try
+            {
+                IngredientCache.Remove(id);
+            }
+            catch (Exception)   // Rollback nosql
+            {
+                await RollbackFileProxy(key, oldIngredient);
+                await RollbackNoSqlDbProxy(id, oldIngredient);
+                throw;
+            }
+            return new RepositoryResponse<bool>(response: true);
         }
 
-        protected override Task<bool> TryDeleteAsync(string id)
+        private async Task PutAsync(Ingredient ingredient, Ingredient oldIngredient = null)
         {
-            throw new NotImplementedException();
+            var key = "ingredients/" + ingredient.Id;
+            await FileProxy.PutTextAsync(key, JsonConvert.SerializeObject(ingredient, Formatting.Indented));
+            try
+            {
+                await NoSqlDbProxy.PutIngredientAsync(ingredient);
+            }
+            catch (Exception)   // Rollback file
+            {
+                await RollbackFileProxy(key, oldIngredient);
+                throw;
+            }
+            try
+            {
+                IngredientCache.Store(ingredient);
+            }
+            catch (Exception)   // Rollback nosql
+            {
+                await RollbackFileProxy(key, oldIngredient);
+                await RollbackNoSqlDbProxy(ingredient.Id, oldIngredient);
+                throw;
+            }
+        }
+
+        private async Task RollbackFileProxy(string key, Ingredient oldIngredient)
+        {
+            if (oldIngredient == null)
+                await FileProxy.DeleteAsync(key);
+            else
+                await FileProxy.PutTextAsync(key, JsonConvert.SerializeObject(oldIngredient, Formatting.Indented));
+        }
+
+        private async Task RollbackNoSqlDbProxy(string id, Ingredient oldIngredient)
+        {
+            if (oldIngredient == null)
+                await NoSqlDbProxy.DeleteIngredientAsync(id);
+            else
+                await NoSqlDbProxy.PutIngredientAsync(oldIngredient);
         }
     }
 }

@@ -30,6 +30,8 @@ namespace RecipeShelf.Data.VPC
             return CacheProxy.CanConnect();
         }
 
+        public bool Exists(string id) => !string.IsNullOrEmpty(CacheProxy.Get(NamesKey, id));
+
         public string[] All() => CacheProxy.HashFields(NamesKey);
 
         public abstract bool IsVegan(string id);

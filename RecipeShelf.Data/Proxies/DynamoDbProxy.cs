@@ -34,6 +34,22 @@ namespace RecipeShelf.Data.Proxies
             return response.TableNames != null && response.TableNames.Contains("Recipes") && response.TableNames.Contains("Ingredients");
         }
 
+        public async Task DeleteIngredientAsync(string id)
+        {
+            _logger.LogDebug("Deleting Ingredient {Id} from DynamoDB", id);
+
+            var ingredientTable = Table.LoadTable(_client, "Ingredients");
+            await ingredientTable.DeleteItemAsync(new Primitive(id));
+        }
+
+        public async Task DeleteRecipeAsync(string id)
+        {
+            _logger.LogDebug("Deleting Recipe {Id} from DynamoDB", id);
+
+            var recipeTable = Table.LoadTable(_client, "Recipes");
+            await recipeTable.DeleteItemAsync(new Primitive(id));
+        }
+
         public async Task<Recipe> GetRecipeAsync(string id)
         {
             _logger.LogDebug("Getting Recipe {Id} from DynamoDB", id);
