@@ -7,9 +7,9 @@ namespace RecipeShelf.Web.Controllers
     [Route("api/[controller]")]
     public class IngredientsController : Controller
     {
-        private readonly IngredientRepository _ingredientRepository;
+        private readonly IIngredientRepository _ingredientRepository;
 
-        public IngredientsController(IngredientRepository ingredientRepository)
+        public IngredientsController(IIngredientRepository ingredientRepository)
         {
             _ingredientRepository = ingredientRepository;
         }

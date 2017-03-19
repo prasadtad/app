@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using RecipeShelf.Common;
 
 namespace RecipeShelf.Data.VPC.Proxies
 {
@@ -19,6 +20,25 @@ namespace RecipeShelf.Data.VPC.Proxies
             _logger = logger;
             _settings = optionsAccessor.Value;
             _redis = ConnectionMultiplexer.Connect(_settings.CacheEndpoint);
+        }
+
+        public string GetString(string setKey)
+        {
+            _logger.LogDebug("Getting {SetKey} string", setKey);
+            var db = _redis.GetDatabase();
+            var value = db.StringGet(setKey);
+            if (value.IsNullOrEmpty) return string.Empty;
+            return value;
+        }
+
+        public void SetString(string setKey, string value, TimeSpan? expiry = null)
+        {
+            if (expiry == null)
+                _logger.LogDebug("Setting {SetKey} string to {Value}", setKey, value);
+            else
+                _logger.LogDebug("Setting {SetKey} string to {Value} with expiry {Duration}", setKey, value, expiry.Value.Describe());
+            var db = _redis.GetDatabase();
+            db.StringSet(setKey, value, expiry);
         }
 
         public long Count(string setKey)

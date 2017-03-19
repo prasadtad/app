@@ -17,6 +17,8 @@ namespace RecipeShelf.Data.VPC.Models
         public readonly string SearchWords = Type.Append("SearchWords");
 
         public readonly string RecentSearches = Type.Append("RecentSearches");
+
+        public readonly string Locks = Type.Append("Locks");
     }
 
     public sealed class RecipeKeys
@@ -37,6 +39,8 @@ namespace RecipeShelf.Data.VPC.Models
         public readonly string SearchWords = Type.Append("SearchWords");
 
         public readonly string RecentSearches = Type.Append("RecentSearches");
+
+        public readonly string Locks = Type.Append("Locks");
     }
 
     public static class KeyRegistry

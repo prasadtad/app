@@ -15,6 +15,8 @@ namespace RecipeShelf.Data.VPC
 
         protected abstract string SearchWordsKey { get; }
 
+        protected abstract string LocksKey { get; }
+
         protected readonly ICacheProxy CacheProxy;
 
         protected readonly ILogger Logger;
@@ -28,6 +30,20 @@ namespace RecipeShelf.Data.VPC
         public bool CanConnect()
         {
             return CacheProxy.CanConnect();
+        }
+
+        public bool TryLock(string id)
+        {
+            var key = LocksKey.Append(id);
+            if (bool.TrueString == CacheProxy.GetString(key))
+                return false;
+            CacheProxy.SetString(key, bool.TrueString, TimeSpan.FromMinutes(2));
+            return true;
+        }
+
+        public void UnLock(string id)
+        {
+            CacheProxy.SetString(LocksKey.Append(id), bool.FalseString, TimeSpan.FromMinutes(2));
         }
 
         public bool Exists(string id) => !string.IsNullOrEmpty(CacheProxy.Get(NamesKey, id));

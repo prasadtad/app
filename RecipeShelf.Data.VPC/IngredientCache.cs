@@ -15,6 +15,8 @@ namespace RecipeShelf.Data.VPC
 
         protected override string SearchWordsKey => KeyRegistry.Ingredients.SearchWords;
 
+        protected override string LocksKey => KeyRegistry.Ingredients.Locks;
+
         public IngredientCache(ICacheProxy cacheProxy, ILogger<IngredientCache> logger) : base(cacheProxy, logger)
         {
         }

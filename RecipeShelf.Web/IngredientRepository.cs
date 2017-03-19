@@ -6,6 +6,7 @@ using RecipeShelf.Common.Proxies;
 using RecipeShelf.Data.Proxies;
 using RecipeShelf.Data.Server.Proxies;
 using RecipeShelf.Data.VPC;
+using RecipeShelf.Data.VPC.Models;
 using System;
 using System.Threading.Tasks;
 
@@ -24,9 +25,12 @@ namespace RecipeShelf.Web
     {
         private IngredientCache IngredientCache { get { return (IngredientCache)Cache; } }
 
-        public IngredientRepository(ILogger logger, IFileProxy fileProxy, INoSqlDbProxy noSqlDbProxy, IMarkdownProxy markdownProxy, IngredientCache ingredientCache) :
+        private readonly RecipeCache RecipeCache;
+
+        public IngredientRepository(ILogger<IngredientRepository> logger, IFileProxy fileProxy, INoSqlDbProxy noSqlDbProxy, IMarkdownProxy markdownProxy, IngredientCache ingredientCache, RecipeCache recipeCache) :
             base(logger, fileProxy, noSqlDbProxy, markdownProxy, ingredientCache)
         {
+            RecipeCache = recipeCache;
         }
 
         public Task<RepositoryResponse<Ingredient>> GetAsync(string id)
@@ -57,35 +61,54 @@ namespace RecipeShelf.Web
             return ExecuteAsync(async () =>
             {
                 if (!Cache.Exists(id)) return new RepositoryResponse<bool>(error: "Ingredient " + id + " does not exist");
-                await PutAsync(ingredient, await NoSqlDbProxy.GetIngredientAsync(id));
+                if (!Cache.TryLock(ingredient.Id)) return new RepositoryResponse<bool>(error: "Ingredient " + ingredient.Id + " is already being changed");
+                try
+                {
+                    await PutAsync(ingredient, await NoSqlDbProxy.GetIngredientAsync(id));
+                }
+                finally
+                {
+                    Cache.UnLock(ingredient.Id);
+                }
                 return new RepositoryResponse<bool>(response: true);
             }, "Cannot update Ingredient " + id, Sources.All);
         }
-        
+
         protected async override Task<RepositoryResponse<bool>> TryDeleteAsync(string id)
         {
             if (!Cache.Exists(id)) return new RepositoryResponse<bool>(error: "Ingredient " + id + " does not exist");
-            Ingredient oldIngredient = await NoSqlDbProxy.GetIngredientAsync(id);
-            var key = "ingredients/" + id;
-            await FileProxy.DeleteAsync(key);
+            var recipesUsingIngredient = RecipeCache.ByFilter(new RecipeFilter { IngredientIds = new[] { id } });
+            if (recipesUsingIngredient.Length > 0)
+                return new RepositoryResponse<bool>(error: "Ingredient " + id + " is used by Recipes [" + string.Join(", ", recipesUsingIngredient) + "]");
+            if (!Cache.TryLock(id)) return new RepositoryResponse<bool>(error: "Ingredient " + id + " is already being changed");
             try
-            {
-                await NoSqlDbProxy.DeleteIngredientAsync(id);
+            {                
+                Ingredient oldIngredient = await NoSqlDbProxy.GetIngredientAsync(id);
+                var key = "ingredients/" + id;
+                await FileProxy.DeleteAsync(key);
+                try
+                {
+                    await NoSqlDbProxy.DeleteIngredientAsync(id);
+                }
+                catch (Exception)   // Rollback file
+                {
+                    await RollbackFileProxy(key, oldIngredient);
+                    throw;
+                }
+                try
+                {
+                    IngredientCache.Remove(id);
+                }
+                catch (Exception)   // Rollback nosql
+                {
+                    await RollbackFileProxy(key, oldIngredient);
+                    await RollbackNoSqlDbProxy(id, oldIngredient);
+                    throw;
+                }
             }
-            catch (Exception)   // Rollback file
+            finally
             {
-                await RollbackFileProxy(key, oldIngredient);
-                throw;
-            }
-            try
-            {
-                IngredientCache.Remove(id);
-            }
-            catch (Exception)   // Rollback nosql
-            {
-                await RollbackFileProxy(key, oldIngredient);
-                await RollbackNoSqlDbProxy(id, oldIngredient);
-                throw;
+                Cache.UnLock(id);
             }
             return new RepositoryResponse<bool>(response: true);
         }
@@ -93,6 +116,7 @@ namespace RecipeShelf.Web
         private async Task PutAsync(Ingredient ingredient, Ingredient oldIngredient = null)
         {
             var key = "ingredients/" + ingredient.Id;
+            ingredient.LastModified = DateTime.UtcNow;
             await FileProxy.PutTextAsync(key, JsonConvert.SerializeObject(ingredient, Formatting.Indented));
             try
             {

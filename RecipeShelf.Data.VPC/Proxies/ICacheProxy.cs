@@ -34,6 +34,10 @@ namespace RecipeShelf.Data.VPC.Proxies
 
     public interface ICacheProxy
     {
+        string GetString(string setKey);
+
+        void SetString(string setKey, string value, TimeSpan? expiry = null);
+
         string Combine(CombineOptions options);
 
         long Count(string setKey);

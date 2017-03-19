@@ -30,6 +30,7 @@ namespace RecipeShelf.Data.Proxies
         public async Task<bool> CanConnectAsync()
         {
             _logger.LogDebug("Checking if Recipes and Ingredients tables exist in DynamoDB");
+
             var response = await _client.ListTablesAsync();
             return response.TableNames != null && response.TableNames.Contains("Recipes") && response.TableNames.Contains("Ingredients");
         }

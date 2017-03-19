@@ -35,6 +35,7 @@ namespace RecipeShelf.Web
                     .AddVPCData(recipeshelfConfiguration)
                     .AddServerData(recipeshelfConfiguration)
                     .AddMvc();
+            AddWeb(services, recipeshelfConfiguration);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -49,6 +50,11 @@ namespace RecipeShelf.Web
             else
                 loggerFactory.AddAWSProvider(Configuration.GetAWSLoggingConfigSection());
             app.UseMvc();
+        }
+
+        private void AddWeb(IServiceCollection services, IConfigurationSection recipeshelfConfiguration)
+        {
+            services.AddSingleton<IIngredientRepository, IngredientRepository>();
         }
     }
 }
