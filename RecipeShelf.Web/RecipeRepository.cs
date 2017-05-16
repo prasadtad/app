@@ -47,7 +47,7 @@ namespace RecipeShelf.Web
             return ExecuteAsync(async () =>
             {
                 recipe.Id = Helper.GenerateNewId();
-                // To avoid the horrors of duplicate ids at all costs
+                // To avoid duplicate ids at all costs
                 while (Cache.Exists(recipe.Id)) recipe.Id = Helper.GenerateNewId();
                 await PutAsync(recipe);
                 return recipe.Id;
@@ -61,17 +61,17 @@ namespace RecipeShelf.Web
             return ExecuteAsync(async () =>
             {
                 if (!Cache.Exists(id)) return new RepositoryResponse<bool>(error: "Recipe " + id + " does not exist");
-                if (!Cache.TryLock(ingredient.Id)) return new RepositoryResponse<bool>(error: "Ingredient " + ingredient.Id + " is already being changed");
+                if (!Cache.TryLock(recipe.Id)) return new RepositoryResponse<bool>(error: "Recipe " + recipe.Id + " is already being changed");
                 try
                 {
-                    await PutAsync(ingredient, await NoSqlDbProxy.GetIngredientAsync(id));
+                    await PutAsync(recipe, await NoSqlDbProxy.GetRecipeAsync(id));
                 }
                 finally
                 {
-                    Cache.UnLock(ingredient.Id);
+                    Cache.UnLock(recipe.Id);
                 }
                 return new RepositoryResponse<bool>(response: true);
-            }, "Cannot update Ingredient " + id, Sources.All);
+            }, "Cannot update Recipe " + id, Sources.All);
         }
 
         protected async override Task<RepositoryResponse<bool>> TryDeleteAsync(string id)

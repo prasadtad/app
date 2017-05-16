@@ -4,10 +4,8 @@ using System.Threading.Tasks;
 using RecipeShelf.Common.Models;
 using Amazon.Runtime;
 using Amazon.DynamoDBv2.DocumentModel;
-using RecipeShelf.Common;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Linq;
 using System.Collections.Generic;
 
 namespace RecipeShelf.Data.Proxies
