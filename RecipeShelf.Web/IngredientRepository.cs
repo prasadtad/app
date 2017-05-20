@@ -77,13 +77,13 @@ namespace RecipeShelf.Web
         protected async override Task<RepositoryResponse<bool>> TryDeleteAsync(string id)
         {
             if (!Cache.Exists(id)) return new RepositoryResponse<bool>(error: "Ingredient " + id + " does not exist");
+            if (!Cache.TryLock(id)) return new RepositoryResponse<bool>(error: "Ingredient " + id + " is already being changed");
             var recipesUsingIngredient = RecipeCache.ByFilter(new RecipeFilter { IngredientIds = new[] { id } });
             if (recipesUsingIngredient.Length > 0)
                 return new RepositoryResponse<bool>(error: "Ingredient " + id + " is used by Recipes [" + string.Join(", ", recipesUsingIngredient) + "]");
-            if (!Cache.TryLock(id)) return new RepositoryResponse<bool>(error: "Ingredient " + id + " is already being changed");
             try
             {                
-                Ingredient oldIngredient = await NoSqlDbProxy.GetIngredientAsync(id);
+                var oldIngredient = await NoSqlDbProxy.GetIngredientAsync(id);
                 var key = "ingredients/" + id;
                 await FileProxy.DeleteAsync(key);
                 try

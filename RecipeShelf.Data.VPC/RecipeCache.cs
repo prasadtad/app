@@ -63,13 +63,6 @@ namespace RecipeShelf.Data.VPC
 
             var oldNames = CacheProxy.Get(KeyRegistry.Recipes.Names, recipe.Id);
 
-            var batch = new List<IEntry>();
-
-            batch.Add(new HashEntry(KeyRegistry.Recipes.Names, recipe.Id, string.Join(Environment.NewLine, recipe.Names)));
-
-            // Store list of ingredientIds with recipeId as key
-            batch.Add(new HashEntry(KeyRegistry.Ingredients.RecipeId, recipe.Id, string.Join(",", recipe.IngredientIds)));
-
             var vegan = true;   // Store if recipe is vegan
             foreach (var ingredientId in recipe.IngredientIds)
             {
@@ -77,23 +70,45 @@ namespace RecipeShelf.Data.VPC
                 vegan = false;
                 break;
             }
-            batch.Add(new SetEntry(KeyRegistry.Recipes.Vegan, vegan, recipe.Id));
 
-            batch.Add(new SetEntry(KeyRegistry.Recipes.IngredientId, recipe.IngredientIds, recipe.Id));
-
-            batch.Add(new SetEntry(KeyRegistry.Recipes.OvernightPreparation, recipe.OvernightPreparation, recipe.Id));
-
-            batch.Add(new SetEntry(KeyRegistry.Recipes.Region, recipe.Region, recipe.Id));
-
-            batch.Add(new SetEntry(KeyRegistry.Recipes.Cuisine, recipe.Cuisine, recipe.Id));
-
-            batch.Add(new SetEntry(KeyRegistry.Recipes.SpiceLevel, recipe.SpiceLevel.ToString(), recipe.Id));
-
-            batch.Add(new SetEntry(KeyRegistry.Recipes.TotalTime, recipe.TotalTime.ToString(), recipe.Id));
-
-            batch.Add(new SetEntry(KeyRegistry.Recipes.Collection, recipe.Collections, recipe.Id));
-
+            var batch = new List<IEntry>
+            {
+                new HashEntry(KeyRegistry.Recipes.Names, recipe.Id, string.Join(Environment.NewLine, recipe.Names)),
+                // Store list of ingredientIds with recipeId as key
+                new HashEntry(KeyRegistry.Ingredients.RecipeId, recipe.Id, string.Join(",", recipe.IngredientIds)),
+                new SetEntry(KeyRegistry.Recipes.Vegan, vegan, recipe.Id),
+                new SetEntry(KeyRegistry.Recipes.IngredientId, recipe.IngredientIds, recipe.Id),
+                new SetEntry(KeyRegistry.Recipes.OvernightPreparation, recipe.OvernightPreparation, recipe.Id),
+                new SetEntry(KeyRegistry.Recipes.Region, recipe.Region, recipe.Id),
+                new SetEntry(KeyRegistry.Recipes.Cuisine, recipe.Cuisine, recipe.Id),
+                new SetEntry(KeyRegistry.Recipes.SpiceLevel, recipe.SpiceLevel.ToString(), recipe.Id),
+                new SetEntry(KeyRegistry.Recipes.TotalTime, recipe.TotalTime.ToString(), recipe.Id),
+                new SetEntry(KeyRegistry.Recipes.Collection, recipe.Collections, recipe.Id)
+            };
             batch.AddRange(CreateSearchWordEntries(recipe.Id, oldNames, recipe.Names));
+
+            CacheProxy.Store(batch);
+        }
+
+        public void Remove(string id)
+        {
+            Logger.LogDebug("Removing Recipe {Id} from cache", id);
+
+            var oldNames = CacheProxy.Get(KeyRegistry.Recipes.Names, id);
+
+            var batch = new List<IEntry>
+            {
+                new HashEntry(KeyRegistry.Recipes.Names, id),
+                new SetEntry(KeyRegistry.Recipes.Vegan, id),
+                new SetEntry(KeyRegistry.Recipes.IngredientId, id),
+                new SetEntry(KeyRegistry.Recipes.OvernightPreparation, id),
+                new SetEntry(KeyRegistry.Recipes.Region, id),
+                new SetEntry(KeyRegistry.Recipes.Cuisine, id),
+                new SetEntry(KeyRegistry.Recipes.SpiceLevel, id),
+                new SetEntry(KeyRegistry.Recipes.TotalTime, id),
+                new SetEntry(KeyRegistry.Recipes.Collection, id)
+            };
+            batch.AddRange(CreateSearchWordEntries(id, oldNames, new string[0]));
 
             CacheProxy.Store(batch);
         }

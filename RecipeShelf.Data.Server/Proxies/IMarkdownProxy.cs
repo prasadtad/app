@@ -7,6 +7,8 @@ namespace RecipeShelf.Data.Server.Proxies
     {
         Task PutRecipeMarkdownAsync(Recipe recipe);
 
+        Task RemoveRecipeMarkdownAsync(string id);
+
         bool CanConnect();
     }
 }

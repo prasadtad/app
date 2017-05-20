@@ -1,5 +1,8 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace RecipeShelf.Common
 {
@@ -33,6 +36,30 @@ namespace RecipeShelf.Common
                     hash = (hash << 5) - hash + foo.GetHashCode();
                 return hash;
             }
-        }        
+        }
+
+        public static Task<int> StartAsync(this Process process, ILogger logger)
+        {
+            var tcs = new TaskCompletionSource<int>();
+
+            process.Exited += (s, ea) => tcs.SetResult(process.ExitCode);
+            process.OutputDataReceived += (s, ea) => logger.LogDebug(ea.Data);
+            process.ErrorDataReceived += (s, ea) => logger.LogError(ea.Data);
+
+            logger.LogDebug("Starting {Process}", process.StartInfo.FileName + " " + process.StartInfo.Arguments);
+
+            bool started = process.Start();
+            if (!started)
+            {
+                //you may allow for the process to be re-used (started = false) 
+                //but I'm not sure about the guarantees of the Exited event in such a case
+                throw new InvalidOperationException("Could not start process: " + process);
+            }
+
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+
+            return tcs.Task;
+        }
     }
 }

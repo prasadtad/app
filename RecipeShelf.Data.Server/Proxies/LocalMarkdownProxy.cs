@@ -4,6 +4,8 @@ using System.IO;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System;
+using RecipeShelf.Common;
 
 namespace RecipeShelf.Data.Server.Proxies
 {
@@ -37,27 +39,45 @@ namespace RecipeShelf.Data.Server.Proxies
             if (_settings.CommitAndPush)
             {
                 if (markdownFileExists)
-                    RunGit($"commit -am \"Updated {recipe.Names[0]} recipe\"");
+                    await RunGit($"commit -am \"Updated {recipe.Names[0]} recipe with Id {recipe.Id}\"");
                 else
                 {
-                    RunGit($"add \"{markdownFile}\"");
-                    RunGit($"commit -m \"Added {recipe.Names[0]} recipe\"");
+                    await RunGit($"add \"{markdownFile}\"");
+                    await RunGit($"commit -m \"Added {recipe.Names[0]} recipe with Id {recipe.Id}\"");
                 }
-                RunGit("push");
+                await RunGit("push");
             }
         }
 
-        private void RunGit(string args)
+        public async Task RemoveRecipeMarkdownAsync(string id)
         {
-            var processStartInfo = new ProcessStartInfo
+            var markdownFile = Path.Combine(_settings.MarkdownFolder, id + ".md");
+            var markdownFileExists = File.Exists(markdownFile);
+            if (!markdownFileExists) return;
+            _logger.LogDebug("Deleting markdown file {markdownFile} for Recipe {Id}", markdownFile, id);
+            File.Delete(markdownFile);
+            if (_settings.CommitAndPush)
             {
-                UseShellExecute = false,
-                WorkingDirectory = _settings.MarkdownFolder,
-                FileName = "git",
-                Arguments = args
-            };
-            _logger.LogDebug("Starting {Process}", processStartInfo.FileName + " " + processStartInfo.Arguments);
-            Process.Start(processStartInfo);
+                await RunGit($"commit -am \"Removed recipe with Id {id}\"");
+                await RunGit("push");
+            }
+        }
+
+        private async Task RunGit(string args)
+        {
+            using (var process = new Process
+            {
+                StartInfo =
+                {
+                    FileName = "git", Arguments = args,
+                    WorkingDirectory = _settings.MarkdownFolder,
+                    UseShellExecute = false, CreateNoWindow = true,
+                    RedirectStandardOutput = true, RedirectStandardError = true,
+                },
+                EnableRaisingEvents = true
+            })
+            if (await process.StartAsync(_logger) != 0)
+                throw new Exception("Git did not return successfully");
         }
     }
 }

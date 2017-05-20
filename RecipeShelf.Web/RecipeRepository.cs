@@ -6,7 +6,6 @@ using RecipeShelf.Common.Proxies;
 using RecipeShelf.Data.Proxies;
 using RecipeShelf.Data.Server.Proxies;
 using RecipeShelf.Data.VPC;
-using RecipeShelf.Data.VPC.Models;
 using System;
 using System.Threading.Tasks;
 
@@ -76,33 +75,41 @@ namespace RecipeShelf.Web
 
         protected async override Task<RepositoryResponse<bool>> TryDeleteAsync(string id)
         {
-            if (!Cache.Exists(id)) return new RepositoryResponse<bool>(error: "Ingredient " + id + " does not exist");
-            var recipesUsingIngredient = RecipeCache.ByFilter(new RecipeFilter { IngredientIds = new[] { id } });
-            if (recipesUsingIngredient.Length > 0)
-                return new RepositoryResponse<bool>(error: "Ingredient " + id + " is used by Recipes [" + string.Join(", ", recipesUsingIngredient) + "]");
-            if (!Cache.TryLock(id)) return new RepositoryResponse<bool>(error: "Ingredient " + id + " is already being changed");
+            if (!Cache.Exists(id)) return new RepositoryResponse<bool>(error: "Recipe " + id + " does not exist");
+            if (!Cache.TryLock(id)) return new RepositoryResponse<bool>(error: "Recipe " + id + " is already being changed");
             try
-            {                
-                Ingredient oldIngredient = await NoSqlDbProxy.GetIngredientAsync(id);
-                var key = "ingredients/" + id;
+            {
+                var oldRecipe = await NoSqlDbProxy.GetRecipeAsync(id);
+                var key = "recipes/" + id;
                 await FileProxy.DeleteAsync(key);
                 try
                 {
-                    await NoSqlDbProxy.DeleteIngredientAsync(id);
+                    await NoSqlDbProxy.DeleteRecipeAsync(id);
                 }
                 catch (Exception)   // Rollback file
                 {
-                    await RollbackFileProxy(key, oldIngredient);
+                    await RollbackFileProxy(key, oldRecipe);
                     throw;
                 }
                 try
                 {
-                    IngredientCache.Remove(id);
+                    RecipeCache.Remove(id);
                 }
                 catch (Exception)   // Rollback nosql
                 {
-                    await RollbackFileProxy(key, oldIngredient);
-                    await RollbackNoSqlDbProxy(id, oldIngredient);
+                    await RollbackFileProxy(key, oldRecipe);
+                    await RollbackNoSqlDbProxy(id, oldRecipe);
+                    throw;
+                }
+                try
+                {
+                    await MarkdownProxy.RemoveRecipeMarkdownAsync(id);
+                }
+                catch (Exception)   // Rollback nosql
+                {
+                    await RollbackFileProxy(key, oldRecipe);
+                    await RollbackNoSqlDbProxy(id, oldRecipe);
+                    RollbackCache(id, oldRecipe);
                     throw;
                 }
             }
@@ -115,44 +122,61 @@ namespace RecipeShelf.Web
 
         private async Task PutAsync(Recipe recipe, Recipe oldRecipe = null)
         {
-            var key = "ingredients/" + ingredient.Id;
-            ingredient.LastModified = DateTime.UtcNow;
-            await FileProxy.PutTextAsync(key, JsonConvert.SerializeObject(ingredient, Formatting.Indented));
+            var key = "recipes/" + recipe.Id;
+            recipe.LastModified = DateTime.UtcNow;
+            await FileProxy.PutTextAsync(key, JsonConvert.SerializeObject(recipe, Formatting.Indented));
             try
             {
-                await NoSqlDbProxy.PutIngredientAsync(ingredient);
+                await NoSqlDbProxy.PutRecipeAsync(recipe);
             }
             catch (Exception)   // Rollback file
             {
-                await RollbackFileProxy(key, oldIngredient);
+                await RollbackFileProxy(key, oldRecipe);
                 throw;
             }
             try
             {
-                IngredientCache.Store(ingredient);
+                RecipeCache.Store(recipe);
             }
             catch (Exception)   // Rollback nosql
             {
-                await RollbackFileProxy(key, oldIngredient);
-                await RollbackNoSqlDbProxy(ingredient.Id, oldIngredient);
+                await RollbackFileProxy(key, oldRecipe);
+                await RollbackNoSqlDbProxy(recipe.Id, oldRecipe);
+                throw;
+            }
+            try
+            {
+                await MarkdownProxy.PutRecipeMarkdownAsync(recipe);
+            }
+            catch (Exception)   // Rollback nosql
+            {
+                await RollbackFileProxy(key, oldRecipe);
+                await RollbackNoSqlDbProxy(recipe.Id, oldRecipe);
+                RollbackCache(recipe.Id, oldRecipe);
                 throw;
             }
         }
 
         private async Task RollbackFileProxy(string key, Recipe oldRecipe)
         {
-            if (oldIngredient == null)
+            if (oldRecipe == null)
                 await FileProxy.DeleteAsync(key);
             else
-                await FileProxy.PutTextAsync(key, JsonConvert.SerializeObject(oldIngredient, Formatting.Indented));
+                await FileProxy.PutTextAsync(key, JsonConvert.SerializeObject(oldRecipe, Formatting.Indented));
         }
 
         private async Task RollbackNoSqlDbProxy(string id, Recipe oldRecipe)
         {
-            if (oldIngredient == null)
-                await NoSqlDbProxy.DeleteIngredientAsync(id);
+            if (oldRecipe == null)
+                await NoSqlDbProxy.DeleteRecipeAsync(id);
             else
-                await NoSqlDbProxy.PutIngredientAsync(oldIngredient);
+                await NoSqlDbProxy.PutRecipeAsync(oldRecipe);
+        }
+
+        private void RollbackCache(string id, Recipe oldRecipe)
+        {
+            RecipeCache.Remove(id);
+            if (oldRecipe != null) RecipeCache.Store(oldRecipe);
         }
     }
 }
