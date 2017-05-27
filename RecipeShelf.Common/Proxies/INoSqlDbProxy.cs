@@ -1,7 +1,7 @@
 ﻿using RecipeShelf.Common.Models;
 using System.Threading.Tasks;
 
-namespace RecipeShelf.Data.Proxies
+namespace RecipeShelf.Common.Proxies
 {
     public interface INoSqlDbProxy
     {

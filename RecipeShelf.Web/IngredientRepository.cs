@@ -3,7 +3,6 @@ using Newtonsoft.Json;
 using RecipeShelf.Common;
 using RecipeShelf.Common.Models;
 using RecipeShelf.Common.Proxies;
-using RecipeShelf.Data.Proxies;
 using RecipeShelf.Data.Server.Proxies;
 using RecipeShelf.Data.VPC;
 using RecipeShelf.Data.VPC.Models;

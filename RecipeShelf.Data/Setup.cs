@@ -8,8 +8,7 @@ namespace RecipeShelf.Data
     {
         public static IServiceCollection AddData(this IServiceCollection services, IConfigurationSection recipeshelfConfiguration)
         {
-            services.Configure<DataSettings>(recipeshelfConfiguration.GetSection("Data"));
-            return services.AddSingleton<INoSqlDbProxy, DynamoDbProxy>();
+            
         }
     }
 }

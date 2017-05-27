@@ -8,21 +8,19 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Collections.Generic;
 
-namespace RecipeShelf.Data.Proxies
+namespace RecipeShelf.Common.Proxies
 {
     public sealed class DynamoDbProxy : INoSqlDbProxy, IDisposable
     {
         private readonly ILogger<DynamoDbProxy> _logger;
 
-        private readonly DataSettings _settings;
-
         private AmazonDynamoDBClient _client;
 
-        public DynamoDbProxy(ILogger<DynamoDbProxy> logger, IOptions<DataSettings> optionsAccessor)
+        public DynamoDbProxy(ILogger<DynamoDbProxy> logger, IOptions<CommonSettings> optionsAccessor)
         {
             _logger = logger;
-            _settings = optionsAccessor.Value;
-            _client = _settings.UseLocalDynamoDB ? new AmazonDynamoDBClient(new BasicAWSCredentials("Local", "Local"), new AmazonDynamoDBConfig { ServiceURL = "http://localhost:8000" }) : new AmazonDynamoDBClient();
+            _client = optionsAccessor.Value.UseLocalDynamoDB ? new AmazonDynamoDBClient(new BasicAWSCredentials("Local", "Local"), new AmazonDynamoDBConfig { ServiceURL = "http://localhost:8000" }) 
+                                                             : new AmazonDynamoDBClient();
         }
 
         public async Task<bool> CanConnectAsync()

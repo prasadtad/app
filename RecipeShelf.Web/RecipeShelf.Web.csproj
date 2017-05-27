@@ -8,7 +8,7 @@
     <Folder Include="wwwroot\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AWS.Logger.AspNetCore" Version="1.1.0" />
+    <PackageReference Include="AWS.Logger.AspNetCore" Version="1.1.1" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore" Version="1.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="1.1.3" />
@@ -21,7 +21,6 @@
     <ProjectReference Include="..\RecipeShelf.Common\RecipeShelf.Common.csproj" />
     <ProjectReference Include="..\RecipeShelf.Data.Server\RecipeShelf.Data.Server.csproj" />
     <ProjectReference Include="..\RecipeShelf.Data.VPC\RecipeShelf.Data.VPC.csproj" />
-    <ProjectReference Include="..\RecipeShelf.Data\RecipeShelf.Data.csproj" />
   </ItemGroup>
 
 </Project>

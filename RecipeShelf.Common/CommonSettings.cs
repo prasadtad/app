@@ -9,5 +9,7 @@ namespace RecipeShelf.Common
         public string LocalFileProxyFolder { get; set; }
 
         public string S3FileProxyBucket { get; set; }
+
+        public bool UseLocalDynamoDB { get; set; }
     }
 }

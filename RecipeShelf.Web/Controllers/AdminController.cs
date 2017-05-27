@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using RecipeShelf.Common.Proxies;
-using RecipeShelf.Data.Proxies;
 using RecipeShelf.Data.Server.Proxies;
 using RecipeShelf.Data.VPC;
 using Newtonsoft.Json;

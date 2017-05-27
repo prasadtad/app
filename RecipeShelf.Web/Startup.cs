@@ -31,7 +31,6 @@ namespace RecipeShelf.Web
             // Add framework services.
             services.AddOptions()
                     .AddCommon(recipeshelfConfiguration)
-                    .AddData(recipeshelfConfiguration)
                     .AddVPCData(recipeshelfConfiguration)
                     .AddServerData(recipeshelfConfiguration)
                     .AddMvc();

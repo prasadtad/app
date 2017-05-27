@@ -12,4 +12,8 @@
     <ProjectReference Include="..\RecipeShelf.Common\RecipeShelf.Common.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Proxies\" />
+  </ItemGroup>
+
 </Project>
