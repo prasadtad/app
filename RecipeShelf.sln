@@ -1,15 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.6
+VisualStudioVersion = 15.0.26730.16
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecipeShelf.Web", "RecipeShelf.Web\RecipeShelf.Web.csproj", "{206A7E81-156B-433E-860A-325C1BFB93EE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RecipeShelf.Web", "RecipeShelf.Web\RecipeShelf.Web.csproj", "{206A7E81-156B-433E-860A-325C1BFB93EE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecipeShelf.Common", "RecipeShelf.Common\RecipeShelf.Common.csproj", "{A4AFF027-A240-4C80-BD9E-2575E5489691}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RecipeShelf.Common", "RecipeShelf.Common\RecipeShelf.Common.csproj", "{A4AFF027-A240-4C80-BD9E-2575E5489691}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecipeShelf.Data.Server", "RecipeShelf.Data.Server\RecipeShelf.Data.Server.csproj", "{5E01612B-669F-4504-9A97-9E28A25F24F0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RecipeShelf.Data.Server", "RecipeShelf.Data.Server\RecipeShelf.Data.Server.csproj", "{5E01612B-669F-4504-9A97-9E28A25F24F0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecipeShelf.Data.VPC", "RecipeShelf.Data.VPC\RecipeShelf.Data.VPC.csproj", "{EE56F8EA-3ACD-4559-A22D-EB836E242A06}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RecipeShelf.Data.VPC", "RecipeShelf.Data.VPC\RecipeShelf.Data.VPC.csproj", "{EE56F8EA-3ACD-4559-A22D-EB836E242A06}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RecipeShelf.Tests", "RecipeShelf.Tests\RecipeShelf.Tests.csproj", "{D1B9605D-BD43-4E2E-8DA7-F6238DCCD60E}"
 EndProject
@@ -42,5 +42,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A66234D7-F17B-4BB2-BF64-AA3E69D256ED}
 	EndGlobalSection
 EndGlobal

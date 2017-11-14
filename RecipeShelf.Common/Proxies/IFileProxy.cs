@@ -16,3 +16,4 @@ namespace RecipeShelf.Common.Proxies
         Task DeleteAsync(string key);      
     }
 }
+

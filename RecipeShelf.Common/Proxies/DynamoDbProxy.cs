@@ -19,7 +19,7 @@ namespace RecipeShelf.Common.Proxies
         public DynamoDbProxy(ILogger<DynamoDbProxy> logger, IOptions<CommonSettings> optionsAccessor)
         {
             _logger = logger;
-            _client = optionsAccessor.Value.UseLocalDynamoDB ? new AmazonDynamoDBClient(new BasicAWSCredentials("Local", "Local"), new AmazonDynamoDBConfig { ServiceURL = "http://localhost:8000" }) 
+            _client = optionsAccessor.Value.UseLocalDynamoDB ? new AmazonDynamoDBClient(new BasicAWSCredentials("Local", "Local"), new AmazonDynamoDBConfig { ServiceURL = "http://localhost:24413" }) 
                                                              : new AmazonDynamoDBClient();
         }
 
@@ -120,14 +120,13 @@ namespace RecipeShelf.Common.Proxies
             _logger.LogDebug("Getting Ingredient {Id} from DynamoDB", id);
 
             var ingredientTable = Table.LoadTable(_client, "Ingredients");
-            var doc = await ingredientTable.GetItemAsync(new Primitive(id));            
-            var ingredient = new Ingredient { Id = id };
-            ingredient.LastModified = doc["lastModified"].AsDateTime();
-            ingredient.Names = doc["names"].AsArrayOfString();
-            ingredient.Description = doc.ContainsKey("description") ? doc["description"].AsString() : null;
-            ingredient.Category = doc.ContainsKey("category") ? doc["category"].AsString() : null;
-            ingredient.Vegan = doc["vegan"].AsBoolean();
-            return ingredient;
+            var doc = await ingredientTable.GetItemAsync(new Primitive(id));
+            return new Ingredient(id,
+                        doc["lastModified"].AsDateTime(),
+                        doc["names"].AsArrayOfString(),
+                        doc.ContainsKey("description") ? doc["description"].AsString() : null,
+                        doc.ContainsKey("category") ? doc["category"].AsString() : null,
+                        doc["vegan"].AsBoolean());
         }
 
         public async Task PutIngredientAsync(Ingredient ingredient)

@@ -8,7 +8,6 @@ namespace RecipeShelf.Common
         /// <summary>
         /// Generate an 8 character id that will work as filename and aws s3 key
         /// </summary>
-        /// <returns></returns>
         public static string GenerateNewId()
         {
             var length = 8;

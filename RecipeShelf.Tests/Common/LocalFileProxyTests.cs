@@ -36,7 +36,7 @@ namespace RecipeShelf.Tests.Common
         }
 
         [Fact]
-        public async Task CanConnectAsync()
+        public async Task CanConnectTestAsync()
         {
             Directory.Delete(_localFileProxyFolder, true);
             Assert.False(await _localFileProxy.CanConnectAsync());
@@ -46,7 +46,7 @@ namespace RecipeShelf.Tests.Common
         }
 
         [Fact]
-        public async Task DeleteAsync()
+        public async Task DeleteTestAsync()
         {
             await _localFileProxy.DeleteAsync(_folder + "\\" + _file1);
             Assert.False(File.Exists(_file1Path));
@@ -54,13 +54,13 @@ namespace RecipeShelf.Tests.Common
         }
 
         [Fact]
-        public async Task GetTextAsync()
+        public async Task GetTextTestAsync()
         {
             Assert.Equal("TestData1", await _localFileProxy.GetTextAsync(_folder + "\\File1.txt"));
         }
 
         [Fact]
-        public async Task ListKeysAsync()
+        public async Task ListKeysTestAsync()
         {
             var keys = await _localFileProxy.ListKeysAsync(_folder);
             Assert.Contains(_file1Path, keys);
@@ -68,7 +68,7 @@ namespace RecipeShelf.Tests.Common
         }
 
         [Fact]
-        public async Task PutTextAsync()
+        public async Task PutTextTestAsync()
         {
             File.Delete(_file1Path);
             await _localFileProxy.PutTextAsync(_folder + "\\File1.txt", "TestData1");

@@ -45,10 +45,10 @@ namespace RecipeShelf.Web
         {
             return ExecuteAsync(async () =>
             {
-                ingredient.Id = Helper.GenerateNewId();
+                var newId = Helper.GenerateNewId();
                 // To avoid the horrors of duplicate ids at all costs
-                while (Cache.Exists(ingredient.Id)) ingredient.Id = Helper.GenerateNewId();
-                await PutAsync(ingredient);
+                while (Cache.Exists(newId)) newId = Helper.GenerateNewId();
+                await PutAsync(newId, ingredient);
                 return ingredient.Id;
             }, "Cannot create new Ingredient", Sources.All);
         }
@@ -60,14 +60,14 @@ namespace RecipeShelf.Web
             return ExecuteAsync(async () =>
             {
                 if (!Cache.Exists(id)) return new RepositoryResponse<bool>(error: "Ingredient " + id + " does not exist");
-                if (!Cache.TryLock(ingredient.Id)) return new RepositoryResponse<bool>(error: "Ingredient " + ingredient.Id + " is already being changed");
+                if (!Cache.TryLock(id)) return new RepositoryResponse<bool>(error: "Ingredient " + ingredient.Id + " is already being changed");
                 try
                 {
-                    await PutAsync(ingredient, await NoSqlDbProxy.GetIngredientAsync(id));
+                    await PutAsync(id, ingredient, await NoSqlDbProxy.GetIngredientAsync(id));
                 }
                 finally
                 {
-                    Cache.UnLock(ingredient.Id);
+                    Cache.UnLock(id);
                 }
                 return new RepositoryResponse<bool>(response: true);
             }, "Cannot update Ingredient " + id, Sources.All);
@@ -112,10 +112,15 @@ namespace RecipeShelf.Web
             return new RepositoryResponse<bool>(response: true);
         }
 
-        private async Task PutAsync(Ingredient ingredient, Ingredient oldIngredient = null)
+        private async Task PutAsync(string id, Ingredient ingredient, Ingredient? oldIngredient = null)
         {
-            var key = "ingredients/" + ingredient.Id;
-            ingredient.LastModified = DateTime.UtcNow;
+            var key = "ingredients/" + id;
+            ingredient = new Ingredient(id,
+                                        DateTime.UtcNow,
+                                        ingredient.Names,
+                                        ingredient.Description,
+                                        ingredient.Category,
+                                        ingredient.Vegan);
             await FileProxy.PutTextAsync(key, JsonConvert.SerializeObject(ingredient, Formatting.Indented));
             try
             {
@@ -138,20 +143,20 @@ namespace RecipeShelf.Web
             }
         }
 
-        private async Task RollbackFileProxy(string key, Ingredient oldIngredient)
+        private async Task RollbackFileProxy(string key, Ingredient? oldIngredient)
         {
             if (oldIngredient == null)
                 await FileProxy.DeleteAsync(key);
             else
-                await FileProxy.PutTextAsync(key, JsonConvert.SerializeObject(oldIngredient, Formatting.Indented));
+                await FileProxy.PutTextAsync(key, JsonConvert.SerializeObject(oldIngredient.Value, Formatting.Indented));
         }
 
-        private async Task RollbackNoSqlDbProxy(string id, Ingredient oldIngredient)
+        private async Task RollbackNoSqlDbProxy(string id, Ingredient? oldIngredient)
         {
             if (oldIngredient == null)
                 await NoSqlDbProxy.DeleteIngredientAsync(id);
             else
-                await NoSqlDbProxy.PutIngredientAsync(oldIngredient);
+                await NoSqlDbProxy.PutIngredientAsync(oldIngredient.Value);
         }
     }
 }
