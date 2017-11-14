@@ -1,0 +1,11 @@
+language: csharp
+solution: RecipeShelf.sln
+mono: none
+dotnet: 2.0.1
+dist: trusty
+install:
+ - nuget restore RecipeShelf.sln
+ - nuget install xunit.runners -Version 2.3.1 -OutputDirectory testrunner
+script:
+ - dotnet build RecipeShelf.sln -c Release
+ - dotnet ./testrunner/xunit.runners.2.3.1/tools/xunit.console.clr4.exe ./RecipeShelf.Tests/bin/Release/netcoreapp2.0/RecipeShelf.Tests.dll
