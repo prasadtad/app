@@ -19,7 +19,7 @@ namespace RecipeShelf.Common.Proxies
         public DynamoDbProxy(ILogger<DynamoDbProxy> logger, IOptions<CommonSettings> optionsAccessor)
         {
             _logger = logger;
-            _client = optionsAccessor.Value.UseLocalDynamoDB ? new AmazonDynamoDBClient(new BasicAWSCredentials("Local", "Local"), new AmazonDynamoDBConfig { ServiceURL = "http://localhost:24413" }) 
+            _client = optionsAccessor.Value.UseLocalDynamoDB ? new AmazonDynamoDBClient(new BasicAWSCredentials("Local", "Local"), new AmazonDynamoDBConfig { ServiceURL = "http://localhost:24413" })
                                                              : new AmazonDynamoDBClient();
         }
 
@@ -54,26 +54,24 @@ namespace RecipeShelf.Common.Proxies
             var recipeTable = Table.LoadTable(_client, "Recipes");
             var doc = await recipeTable.GetItemAsync(new Primitive(id));
 
-            var recipe = new Recipe { Id = id };
-            recipe.AccompanimentIds = doc.ContainsKey("accompanimentIds") ? doc["accompanimentIds"].AsArrayOfString() : null;
-            recipe.Approved = doc["approved"].AsBoolean();
-            recipe.ChefId = doc["chefId"].AsString();
-            recipe.Collections = doc.ContainsKey("collections") ? doc["collections"].AsArrayOfString() : null;
-            recipe.Cuisine = doc["cuisine"].AsString();
-            recipe.Description = doc["description"].AsString();
-            recipe.ImageId = doc.ContainsKey("imageId") ? doc["imageId"].AsString() : null;
-            recipe.IngredientIds = doc.ContainsKey("ingredientIds") ? doc["ingredientIds"].AsArrayOfString() : null;
-            recipe.Ingredients = doc.ContainsKey("ingredients") ? FromDynamoDBList(doc["ingredients"].AsDynamoDBList()) : null;
-            recipe.LastModified = doc["lastModified"].AsDateTime();
-            recipe.Names = doc["names"].AsArrayOfString();
-            recipe.OvernightPreparation = doc["overnightPreparation"].AsBoolean();
-            recipe.Region = doc.ContainsKey("region") ? doc["region"].AsString() : null;
-            recipe.Servings = doc.ContainsKey("servings") ? doc["servings"].AsString() : null;
-            recipe.SpiceLevel = (SpiceLevel)Enum.Parse(typeof(SpiceLevel), doc["spiceLevel"].AsString());
-            recipe.Steps = doc.ContainsKey("steps") ? FromDynamoDBList(doc["steps"].AsDynamoDBList()) : null;
-            recipe.TotalTimeInMinutes = doc["totalTimeInMinutes"].AsInt();
-
-            return recipe;
+            return new Recipe(id,
+                                    doc["lastModified"].AsDateTime(),
+                                    doc["names"].AsArrayOfString(),
+                                    doc["description"].AsString(),
+                                    doc.ContainsKey("steps") ? FromDynamoDBList(doc["steps"].AsDynamoDBList()) : null,
+                                    doc["totalTimeInMinutes"].AsInt(),
+                                    doc.ContainsKey("servings") ? doc["servings"].AsString() : null,
+                                    doc["approved"].AsBoolean(),
+                                    (SpiceLevel)Enum.Parse(typeof(SpiceLevel), doc["spiceLevel"].AsString()),
+                                    doc.ContainsKey("region") ? doc["region"].AsString() : null,
+                                    doc["chefId"].AsString(),
+                                    doc.ContainsKey("imageId") ? doc["imageId"].AsString() : null,
+                                    doc.ContainsKey("ingredients") ? FromDynamoDBList(doc["ingredients"].AsDynamoDBList()) : null,
+                                    doc["cuisine"].AsString(),
+                                    doc.ContainsKey("ingredientIds") ? doc["ingredientIds"].AsArrayOfString() : null,
+                                    doc["overnightPreparation"].AsBoolean(),
+                                    doc.ContainsKey("accompanimentIds") ? doc["accompanimentIds"].AsArrayOfString() : null,
+                                    doc.ContainsKey("collections") ? doc["collections"].AsArrayOfString() : null);
         }
 
         public async Task PutRecipeAsync(Recipe recipe)
@@ -154,11 +152,8 @@ namespace RecipeShelf.Common.Proxies
             foreach (var entry in list.Entries)
             {
                 var doc = entry.AsDocument();
-                recipeItems.Add(new RecipeItem
-                {
-                    Text = doc["text"].AsString(),
-                    Decorator = (Decorator)Enum.Parse(typeof(Decorator), doc["decorator"].AsString())
-                });
+                recipeItems.Add(new RecipeItem(doc["text"].AsString(),
+                                               (Decorator)Enum.Parse(typeof(Decorator), doc["decorator"].AsString())));
             }
             return recipeItems.ToArray();
         }

@@ -44,11 +44,11 @@ namespace RecipeShelf.Web
         {
             return ExecuteAsync(async () =>
             {
-                recipe.Id = Helper.GenerateNewId();
+                var newId = Helper.GenerateNewId();
                 // To avoid duplicate ids at all costs
-                while (Cache.Exists(recipe.Id)) recipe.Id = Helper.GenerateNewId();
-                await PutAsync(recipe);
-                return recipe.Id;
+                while (Cache.Exists(newId)) newId = Helper.GenerateNewId();
+                await PutAsync(newId, recipe);
+                return newId;
             }, "Cannot create new Recipe", Sources.All);
         }
 
@@ -62,7 +62,7 @@ namespace RecipeShelf.Web
                 if (!Cache.TryLock(recipe.Id)) return new RepositoryResponse<bool>(error: "Recipe " + recipe.Id + " is already being changed");
                 try
                 {
-                    await PutAsync(recipe, await NoSqlDbProxy.GetRecipeAsync(id));
+                    await PutAsync(id, recipe, await NoSqlDbProxy.GetRecipeAsync(id));
                 }
                 finally
                 {
@@ -119,10 +119,10 @@ namespace RecipeShelf.Web
             return new RepositoryResponse<bool>(response: true);
         }
 
-        private async Task PutAsync(Recipe recipe, Recipe oldRecipe = null)
+        private async Task PutAsync(string id, Recipe recipe, Recipe? oldRecipe = null)
         {
-            var key = "recipes/" + recipe.Id;
-            recipe.LastModified = DateTime.UtcNow;
+            var key = "recipes/" + id;
+            recipe = new Recipe(id, DateTime.UtcNow, recipe.Names, recipe.Description, recipe.Steps, recipe.TotalTimeInMinutes, recipe.Servings, recipe.Approved, recipe.SpiceLevel, recipe.Region, recipe.ChefId, recipe.ImageId, recipe.Ingredients, recipe.Cuisine, recipe.IngredientIds, recipe.OvernightPreparation, recipe.AccompanimentIds, recipe.Collections);
             await FileProxy.PutTextAsync(key, JsonConvert.SerializeObject(recipe, Formatting.Indented));
             try
             {
@@ -156,26 +156,26 @@ namespace RecipeShelf.Web
             }
         }
 
-        private async Task RollbackFileProxy(string key, Recipe oldRecipe)
+        private async Task RollbackFileProxy(string key, Recipe? oldRecipe)
         {
             if (oldRecipe == null)
                 await FileProxy.DeleteAsync(key);
             else
-                await FileProxy.PutTextAsync(key, JsonConvert.SerializeObject(oldRecipe, Formatting.Indented));
+                await FileProxy.PutTextAsync(key, JsonConvert.SerializeObject(oldRecipe.Value, Formatting.Indented));
         }
 
-        private async Task RollbackNoSqlDbProxy(string id, Recipe oldRecipe)
+        private async Task RollbackNoSqlDbProxy(string id, Recipe? oldRecipe)
         {
             if (oldRecipe == null)
                 await NoSqlDbProxy.DeleteRecipeAsync(id);
             else
-                await NoSqlDbProxy.PutRecipeAsync(oldRecipe);
+                await NoSqlDbProxy.PutRecipeAsync(oldRecipe.Value);
         }
 
-        private void RollbackCache(string id, Recipe oldRecipe)
+        private void RollbackCache(string id, Recipe? oldRecipe)
         {
             RecipeCache.Remove(id);
-            if (oldRecipe != null) RecipeCache.Store(oldRecipe);
+            if (oldRecipe != null) RecipeCache.Store(oldRecipe.Value);
         }
     }
 }

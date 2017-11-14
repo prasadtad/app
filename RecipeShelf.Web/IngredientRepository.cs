@@ -49,7 +49,7 @@ namespace RecipeShelf.Web
                 // To avoid the horrors of duplicate ids at all costs
                 while (Cache.Exists(newId)) newId = Helper.GenerateNewId();
                 await PutAsync(newId, ingredient);
-                return ingredient.Id;
+                return newId;
             }, "Cannot create new Ingredient", Sources.All);
         }
 

@@ -15,3 +15,4 @@ favicons
 /RecipeShelf.Site/project.lock.json
 /RecipeShelf.Utilities/project.lock.json
 /RecipeShelf.Console
+/.vs/RecipeShelf/v15/sqlite3/storage.ide
