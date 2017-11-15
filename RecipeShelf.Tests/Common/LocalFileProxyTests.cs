@@ -56,7 +56,18 @@ namespace RecipeShelf.Tests.Common
         [Fact]
         public async Task GetTextTestAsync()
         {
-            Assert.Equal("TestData1", (await _localFileProxy.GetTextAsync(Path.Combine(_folder, "File1.txt"))).Text);
+            var filename = Path.Combine(_folder, "File1.txt");
+            var fileText = await _localFileProxy.GetTextAsync(filename);
+            Assert.Equal("TestData1", fileText.Text);
+            var fileText2 = await _localFileProxy.GetTextAsync(filename, fileText.LastModified);
+            Assert.Null(fileText2.Text);
+            Assert.Equal(fileText.LastModified, fileText2.LastModified);
+            await File.WriteAllTextAsync(_file1Path, "TestData1x");
+            var fileText3 = await _localFileProxy.GetTextAsync(filename, fileText2.LastModified);
+            Assert.NotNull(fileText3.Text);
+            Assert.Equal("TestData1x", fileText3.Text);
+            Assert.NotEqual(fileText2.LastModified, fileText3.LastModified);
+            await File.WriteAllTextAsync(_file1Path, "TestData1");
         }
 
         [Fact]
