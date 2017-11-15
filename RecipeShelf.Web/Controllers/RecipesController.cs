@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace RecipeShelf.Web.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     public class RecipesController : Controller
     {
         private readonly IRecipeRepository _recipeRepository;
@@ -30,6 +30,12 @@ namespace RecipeShelf.Web.Controllers
         public async Task<IActionResult> Delete(string id)
         {
             return (await _recipeRepository.DeleteAsync(id)).ToActionResult();
-        }        
+        }
+
+        [HttpGet("resetcache")]
+        public async Task<IActionResult> ResetCache()
+        {
+            return (await _recipeRepository.ResetCacheAsync()).ToActionResult();
+        }
     }
 }

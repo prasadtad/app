@@ -118,6 +118,7 @@ namespace RecipeShelf.Data.VPC.Proxies
         {
             var db = _redis.GetDatabase();
             var transaction = db.CreateTransaction();
+            var transactionTasks = new List<Task<bool>>();
             var count = 0;
             foreach (var entry in batch)
             {
@@ -129,7 +130,7 @@ namespace RecipeShelf.Data.VPC.Proxies
                         foreach (var setName in setEntry.SortedSetNames)
                         {
                             if (string.IsNullOrEmpty(setName)) continue;
-                            await transaction.SetAddAsync(setEntry.SetPrefix, setName);
+                            transactionTasks.Add(transaction.SetAddAsync(setEntry.SetPrefix, setName));
                             count++;
                         }
                     }
@@ -137,7 +138,7 @@ namespace RecipeShelf.Data.VPC.Proxies
                     {
                         if (setEntry.SortedSetNames == null || Array.BinarySearch(setEntry.SortedSetNames, setName) < 0)
                         {
-                            await transaction.SetRemoveAsync(setEntry.SetPrefix.Append(setName), setEntry.Value);
+                            transactionTasks.Add(transaction.SetRemoveAsync(setEntry.SetPrefix.Append(setName), setEntry.Value));
                             count++;
                         }
                     }
@@ -146,7 +147,7 @@ namespace RecipeShelf.Data.VPC.Proxies
                         foreach (var setName in setEntry.SortedSetNames)
                         {
                             if (string.IsNullOrEmpty(setName)) continue;
-                            await transaction.SetAddAsync(setEntry.SetPrefix.Append(setName), setEntry.Value);
+                            transactionTasks.Add(transaction.SetAddAsync(setEntry.SetPrefix.Append(setName), setEntry.Value));
                             count++;
                         }
                     }
@@ -155,14 +156,14 @@ namespace RecipeShelf.Data.VPC.Proxies
                 {
                     var hashEntry = (Models.HashEntry)entry;
                     if (string.IsNullOrEmpty(hashEntry.Value))
-                        await transaction.HashDeleteAsync(hashEntry.SetKey, hashEntry.HashField);
+                        transactionTasks.Add(transaction.HashDeleteAsync(hashEntry.SetKey, hashEntry.HashField));
                     else
-                        await transaction.HashSetAsync(hashEntry.SetKey, hashEntry.HashField, hashEntry.Value);
+                        transactionTasks.Add(transaction.HashSetAsync(hashEntry.SetKey, hashEntry.HashField, hashEntry.Value));
                     count++;
                 }
             }
             _logger.LogDebug("Executing transaction with {Count} commands");
-            await transaction.ExecuteAsync();
+            if (await transaction.ExecuteAsync()) await Task.WhenAll(transactionTasks);
         }
 
         public async Task<string> CombineAsync(CombineOptions key)

@@ -5,6 +5,7 @@ using RecipeShelf.Common.Models;
 using RecipeShelf.Common.Proxies;
 using RecipeShelf.Data.VPC;
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace RecipeShelf.Web
@@ -14,6 +15,8 @@ namespace RecipeShelf.Web
         Task<RepositoryResponse<string>> CreateAsync(Recipe recipe);
 
         Task<RepositoryResponse<bool>> UpdateAsync(string id, Recipe recipe);
+
+        Task<RepositoryResponse<string>> ResetCacheAsync();
     }
 
     public class RecipeRepository : Repository, IRecipeRepository
@@ -57,6 +60,20 @@ namespace RecipeShelf.Web
             }, "Cannot update Recipe " + id, Sources.All);
         }
 
+        public Task<RepositoryResponse<string>> ResetCacheAsync()
+        {
+            return ExecuteAsync(async () =>
+            {
+                var sw = Stopwatch.StartNew();
+                foreach (var key in await FileProxy.ListKeysAsync("recipes"))
+                {
+                    var recipe = JsonConvert.DeserializeObject<Recipe>((await FileProxy.GetTextAsync(key)).Text);
+                    await RecipeCache.StoreAsync(recipe);
+                }
+                return new RepositoryResponse<string>(response: "Updating cache took " + sw.Elapsed.Describe());
+            }, "Cannot reset recipes cache", Sources.All);
+        }
+
         protected async override Task<RepositoryResponse<bool>> TryDeleteAsync(string id)
         {
             if (!await Cache.ExistsAsync(id)) return new RepositoryResponse<bool>(error: "Recipe " + id + " does not exist");
@@ -74,7 +91,7 @@ namespace RecipeShelf.Web
                 {
                     await RollbackFileProxyAsync(key, oldRecipe);
                     throw;
-                }                
+                }
             }
             finally
             {
@@ -96,7 +113,7 @@ namespace RecipeShelf.Web
             {
                 await RollbackFileProxyAsync(key, oldRecipeJson);
                 throw;
-            }            
+            }
         }
 
         private async Task RollbackFileProxyAsync(string key, string oldRecipeJson)
