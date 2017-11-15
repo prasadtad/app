@@ -5,4 +5,4 @@ dotnet: 2.0.0
 dist: trusty
 script:
  - dotnet build RecipeShelf.sln -c Release
- - dotnet xunit ./RecipeShelf.Tests/bin/Release/netcoreapp2.0/RecipeShelf.Tests.dll
+ - dotnet test RecipeShelf.Tests
