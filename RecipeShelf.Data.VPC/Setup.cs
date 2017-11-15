@@ -10,7 +10,6 @@ namespace RecipeShelf.Data.VPC
         {
             services.Configure<DataVPCSettings>(recipeshelfConfiguration.GetSection("DataVPC"));
             return services.AddSingleton<ICacheProxy, RedisProxy>()
-                           .AddSingleton<IngredientCache>()
                            .AddSingleton<RecipeCache>();
         }
     }

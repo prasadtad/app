@@ -1,10 +1,13 @@
 ﻿using Amazon.S3.Model;
 using Amazon.S3.Transfer;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using RecipeShelf.Common.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace RecipeShelf.Common.Proxies
@@ -28,17 +31,17 @@ namespace RecipeShelf.Common.Proxies
             return _transferUtility.S3Client.DoesS3BucketExistAsync(_settings.S3FileProxyBucket);
         }
 
-        public async Task DeleteAsync(string key)
+        public Task DeleteAsync(string key)
         {
             _logger.LogDebug("Deleting {Key}", key);
-            await _transferUtility.S3Client.DeleteObjectAsync(_settings.S3FileProxyBucket, key);
+            return _transferUtility.S3Client.DeleteObjectAsync(_settings.S3FileProxyBucket, key);
         }
 
         public async Task<IEnumerable<string>> ListKeysAsync(string folder)
         {
             _logger.LogDebug("Listing keys in {Folder}", folder);
             var allKeys = new List<string>();
-            ListObjectsV2Request request = new ListObjectsV2Request
+            var request = new ListObjectsV2Request
             {
                 BucketName = _settings.S3FileProxyBucket,
                 MaxKeys = 100,
@@ -61,21 +64,29 @@ namespace RecipeShelf.Common.Proxies
             return allKeys;
         }
 
-        public async Task<string> GetTextAsync(string key)
+        public async Task<FileText> GetTextAsync(string key, DateTime? since = null)
         {
-            _logger.LogDebug("Reading {Key} as text", key);
+            if (since == null)
+                _logger.LogDebug("Reading {Key} as text", key);
+            else
+                _logger.LogDebug("Reading {Key} as text if changed after {Since}", key, since.Value);
             var request = new GetObjectRequest
             {
                 BucketName = _settings.S3FileProxyBucket,
                 Key = key
             };
-            using (GetObjectResponse response = await _transferUtility.S3Client.GetObjectAsync(request))
-            using (Stream responseStream = response.ResponseStream)
-            using (StreamReader reader = new StreamReader(responseStream))
-                return reader.ReadToEnd();
+            if (since != null) request.ModifiedSinceDate = since.Value;
+            using (var response = await _transferUtility.S3Client.GetObjectAsync(request))
+            {
+                if (response.HttpStatusCode == HttpStatusCode.PreconditionFailed)
+                    return new FileText(null, response.LastModified);
+                using (var responseStream = response.ResponseStream)
+                using (var reader = new StreamReader(responseStream))
+                    return new FileText(await reader.ReadToEndAsync(), response.LastModified);
+            }
         }
 
-        public async Task PutTextAsync(string key, string text)
+        public Task PutTextAsync(string key, string text)
         {
             _logger.LogDebug("Putting text at {Key}", key);
             var request = new PutObjectRequest
@@ -84,7 +95,7 @@ namespace RecipeShelf.Common.Proxies
                 Key = key,
                 ContentBody = text
             };
-            await _transferUtility.S3Client.PutObjectAsync(request);
+            return _transferUtility.S3Client.PutObjectAsync(request);
         }
 
         public void Dispose()

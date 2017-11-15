@@ -1,9 +1,10 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using RecipeShelf.Common.Models;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace RecipeShelf.Common.Proxies
 {
@@ -31,12 +32,18 @@ namespace RecipeShelf.Common.Proxies
             return Task.CompletedTask;
         }
 
-        public async Task<string> GetTextAsync(string filename)
+        public async Task<FileText> GetTextAsync(string filename, DateTime? since = null)
         {
-            _logger.LogDebug("Reading {Filename} as text", filename);
-            using (var reader = File.OpenText(Path.Combine(_settings.LocalFileProxyFolder, filename)))
-                return await reader.ReadToEndAsync();
-        }
+            if (since == null)
+                _logger.LogDebug("Reading {Filename} as text", filename);
+            else
+                _logger.LogDebug("Reading {Filename} as text if changed after {Since}", filename, since.Value);
+            var path = Path.Combine(_settings.LocalFileProxyFolder, filename);
+            var lastWriteTime = File.GetLastWriteTime(path);
+            if (since == null || lastWriteTime > since.Value)
+                return new FileText(await File.ReadAllTextAsync(path), lastWriteTime);
+            return new FileText(null, lastWriteTime);
+        }        
 
         public Task<IEnumerable<string>> ListKeysAsync(string folder)
         {
@@ -44,11 +51,10 @@ namespace RecipeShelf.Common.Proxies
             return Task.FromResult(Directory.EnumerateFileSystemEntries(Path.Combine(_settings.LocalFileProxyFolder, folder)));
         }
 
-        public async Task PutTextAsync(string filename, string text)
+        public Task PutTextAsync(string filename, string text)
         {
             _logger.LogDebug("Saving text at {Filename}", filename);
-            using (var writer = File.CreateText(Path.Combine(_settings.LocalFileProxyFolder, filename)))
-                await writer.WriteAsync(text);
+            return File.WriteAllTextAsync(Path.Combine(_settings.LocalFileProxyFolder, filename), text);
         }
     }
 }

@@ -10,8 +10,8 @@
   <ItemGroup>
     <PackageReference Include="AWS.Logger.AspNetCore" Version="1.2.4" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.1.1" />
-    <PackageReference Include="Microsoft.AspNetCore" Version="2.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore" Version="2.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="2.0.0" />
   </ItemGroup>
   <ItemGroup>
@@ -19,7 +19,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RecipeShelf.Common\RecipeShelf.Common.csproj" />
-    <ProjectReference Include="..\RecipeShelf.Data.Server\RecipeShelf.Data.Server.csproj" />
     <ProjectReference Include="..\RecipeShelf.Data.VPC\RecipeShelf.Data.VPC.csproj" />
   </ItemGroup>
 

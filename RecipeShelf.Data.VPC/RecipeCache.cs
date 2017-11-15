@@ -1,10 +1,11 @@
-﻿using RecipeShelf.Data.VPC.Models;
-using RecipeShelf.Data.VPC.Proxies;
+﻿using Microsoft.Extensions.Logging;
 using RecipeShelf.Common;
 using RecipeShelf.Common.Models;
+using RecipeShelf.Data.VPC.Models;
+using RecipeShelf.Data.VPC.Proxies;
 using System;
 using System.Collections.Generic;
-using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
 
 namespace RecipeShelf.Data.VPC
 {
@@ -12,7 +13,7 @@ namespace RecipeShelf.Data.VPC
     {
         public override string Table => "Recipes";
 
-        private IngredientCache _ingredientCache;
+        private IngredientsCache _ingredientsCache;
 
         protected override string NamesKey => KeyRegistry.Recipes.Names;
 
@@ -20,55 +21,58 @@ namespace RecipeShelf.Data.VPC
 
         protected override string LocksKey => KeyRegistry.Recipes.Locks;
 
-        public RecipeCache(ICacheProxy cacheProxy, IngredientCache ingredientCache, ILogger<RecipeCache> logger) : base(cacheProxy, logger)
+        public RecipeCache(ICacheProxy cacheProxy, IngredientsCache ingredientsCache, ILogger<RecipeCache> logger) : base(cacheProxy, logger)
         {
-            _ingredientCache = ingredientCache;
+            _ingredientsCache = ingredientsCache;
         }
 
-        public string[] ByChef(string chefId) => CacheProxy.Members(KeyRegistry.Recipes.ChefId.Append(chefId));
+        public Task<string[]> ByChefAsync(string chefId) => CacheProxy.MembersAsync(KeyRegistry.Recipes.ChefId.Append(chefId));
 
-        public string[] ByFilter(RecipeFilter filter)
+        public async Task<string[]> ByFilterAsync(RecipeFilter filter)
         {
             var keys = new List<string>();
             if (filter.Vegan != null) keys.Add(KeyRegistry.Recipes.Vegan.Append(filter.Vegan.Value));
             if (filter.OvernightPreparation != null) keys.Add(KeyRegistry.Recipes.OvernightPreparation.Append(filter.OvernightPreparation.Value));
-            if (filter.IngredientIds != null && filter.IngredientIds.Length > 0) keys.Add(CacheProxy.Combine(new CombineOptions(LogicalOperator.Or, KeyRegistry.Recipes.IngredientId, filter.IngredientIds)));
-            if (filter.Regions != null && filter.Regions.Length > 0) keys.Add(CacheProxy.Combine(new CombineOptions(LogicalOperator.Or, KeyRegistry.Recipes.Region, filter.Regions)));
-            if (filter.Cuisines != null && filter.Cuisines.Length > 0) keys.Add(CacheProxy.Combine(new CombineOptions(LogicalOperator.Or, KeyRegistry.Recipes.Cuisine, filter.Cuisines)));
-            if (filter.SpiceLevels != null && filter.SpiceLevels.Length > 0) keys.Add(CacheProxy.Combine(new CombineOptions(LogicalOperator.Or, KeyRegistry.Recipes.SpiceLevel, filter.SpiceLevels.ToStrings())));
-            if (filter.TotalTimes != null && filter.TotalTimes.Length > 0) keys.Add(CacheProxy.Combine(new CombineOptions(LogicalOperator.Or, KeyRegistry.Recipes.TotalTime, filter.TotalTimes.ToStrings())));
-            if (filter.Collections != null && filter.Collections.Length > 0) keys.Add(CacheProxy.Combine(new CombineOptions(LogicalOperator.Or, KeyRegistry.Recipes.Collection, filter.Collections)));
+            if (filter.IngredientIds != null && filter.IngredientIds.Length > 0) keys.Add(await CacheProxy.CombineAsync(new CombineOptions(LogicalOperator.Or, KeyRegistry.Recipes.IngredientId, filter.IngredientIds)));
+            if (filter.Regions != null && filter.Regions.Length > 0) keys.Add(await CacheProxy.CombineAsync(new CombineOptions(LogicalOperator.Or, KeyRegistry.Recipes.Region, filter.Regions)));
+            if (filter.Cuisines != null && filter.Cuisines.Length > 0) keys.Add(await CacheProxy.CombineAsync(new CombineOptions(LogicalOperator.Or, KeyRegistry.Recipes.Cuisine, filter.Cuisines)));
+            if (filter.SpiceLevels != null && filter.SpiceLevels.Length > 0) keys.Add(await CacheProxy.CombineAsync(new CombineOptions(LogicalOperator.Or, KeyRegistry.Recipes.SpiceLevel, filter.SpiceLevels.ToStrings())));
+            if (filter.TotalTimes != null && filter.TotalTimes.Length > 0) keys.Add(await CacheProxy.CombineAsync(new CombineOptions(LogicalOperator.Or, KeyRegistry.Recipes.TotalTime, filter.TotalTimes.ToStrings())));
+            if (filter.Collections != null && filter.Collections.Length > 0) keys.Add(await CacheProxy.CombineAsync(new CombineOptions(LogicalOperator.Or, KeyRegistry.Recipes.Collection, filter.Collections)));
             if (keys.Count == 0) return new string[0];
-            return CacheProxy.Members(CacheProxy.Combine(new CombineOptions(LogicalOperator.And, keys.ToArray())));
+            return await CacheProxy.MembersAsync(await CacheProxy.CombineAsync(new CombineOptions(LogicalOperator.And, keys.ToArray())));
         }
 
-        public override bool IsVegan(string id) => CacheProxy.IsMember(KeyRegistry.Recipes.Vegan.Append(true), id);
+        public Task<bool> IsVeganAsync(string id) => CacheProxy.IsMemberAsync(KeyRegistry.Recipes.Vegan.Append(true), id);
 
-        public string[] GetChefs() => CacheProxy.Members(KeyRegistry.Recipes.ChefId);
+        public Task<string[]> GetChefsAsync() => CacheProxy.MembersAsync(KeyRegistry.Recipes.ChefId);
 
-        public string[] GetCollections() => CacheProxy.Members(KeyRegistry.Recipes.Collection);
+        public Task<string[]> GetCollectionsAsync() => CacheProxy.MembersAsync(KeyRegistry.Recipes.Collection);
 
-        public string[] GetCuisines() => CacheProxy.Members(KeyRegistry.Recipes.Cuisine);
+        public Task<string[]> GetCuisinesAsync() => CacheProxy.MembersAsync(KeyRegistry.Recipes.Cuisine);
 
-        public string[] GetRegions() => CacheProxy.Members(KeyRegistry.Recipes.Region);
+        public Task<string[]> GetRegionsAsync() => CacheProxy.MembersAsync(KeyRegistry.Recipes.Region);
 
-        public long GetCountForCollection(string collection)
+        public Task<long> GetCountForCollectionAsync(string collection)
         {
-            return CacheProxy.Count(KeyRegistry.Recipes.Collection.Append(collection));
+            return CacheProxy.CountAsync(KeyRegistry.Recipes.Collection.Append(collection));
         }
 
-        public void Store(Recipe recipe)
+        public async Task StoreAsync(Recipe recipe)
         {
             Logger.LogDebug("Saving Recipe {Id} in cache", recipe.Id);
 
-            var oldNames = CacheProxy.Get(KeyRegistry.Recipes.Names, recipe.Id);
+            var oldNames = await CacheProxy.GetAsync(KeyRegistry.Recipes.Names, recipe.Id);
 
             var vegan = true;   // Store if recipe is vegan
             foreach (var ingredientId in recipe.IngredientIds)
             {
-                if (_ingredientCache.IsVegan(ingredientId)) continue;
-                vegan = false;
-                break;
+                var ingredient = await _ingredientsCache.GetAsync(ingredientId);
+                if (!ingredient.Vegan)
+                {
+                    vegan = false;
+                    break;
+                }
             }
 
             var batch = new List<IEntry>
@@ -85,16 +89,16 @@ namespace RecipeShelf.Data.VPC
                 new SetEntry(KeyRegistry.Recipes.TotalTime, recipe.TotalTime.ToString(), recipe.Id),
                 new SetEntry(KeyRegistry.Recipes.Collection, recipe.Collections, recipe.Id)
             };
-            batch.AddRange(CreateSearchWordEntries(recipe.Id, oldNames, recipe.Names));
+            batch.AddRange(await CreateSearchWordEntriesAsync(recipe.Id, oldNames, recipe.Names));
 
-            CacheProxy.Store(batch);
+            await CacheProxy.StoreAsync(batch);
         }
 
-        public void Remove(string id)
+        public async Task RemoveAsync(string id)
         {
             Logger.LogDebug("Removing Recipe {Id} from cache", id);
 
-            var oldNames = CacheProxy.Get(KeyRegistry.Recipes.Names, id);
+            var oldNames = await CacheProxy.GetAsync(KeyRegistry.Recipes.Names, id);
 
             var batch = new List<IEntry>
             {
@@ -108,9 +112,9 @@ namespace RecipeShelf.Data.VPC
                 new SetEntry(KeyRegistry.Recipes.TotalTime, id),
                 new SetEntry(KeyRegistry.Recipes.Collection, id)
             };
-            batch.AddRange(CreateSearchWordEntries(id, oldNames, new string[0]));
+            batch.AddRange(await CreateSearchWordEntriesAsync(id, oldNames, new string[0]));
 
-            CacheProxy.Store(batch);
+            await CacheProxy.StoreAsync(batch);
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using RecipeShelf.Common.Proxies;
+using System;
 
 namespace RecipeShelf.Common
 {
@@ -9,7 +10,7 @@ namespace RecipeShelf.Common
         public string LocalFileProxyFolder { get; set; }
 
         public string S3FileProxyBucket { get; set; }
-
-        public bool UseLocalDynamoDB { get; set; }
+        
+        public TimeSpan IngredientsCacheExpiration { get; set; }
     }
 }

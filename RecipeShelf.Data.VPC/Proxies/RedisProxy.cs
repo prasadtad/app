@@ -1,11 +1,12 @@
-﻿using RecipeShelf.Data.VPC.Models;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using RecipeShelf.Common;
 using RecipeShelf.Common.Models;
+using RecipeShelf.Data.VPC.Models;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using RecipeShelf.Common;
+using System.Threading.Tasks;
 
 namespace RecipeShelf.Data.VPC.Proxies
 {
@@ -22,52 +23,52 @@ namespace RecipeShelf.Data.VPC.Proxies
             _redis = ConnectionMultiplexer.Connect(_settings.CacheEndpoint);
         }
 
-        public string GetString(string setKey)
+        public async Task<string> GetStringAsync(string setKey)
         {
             _logger.LogDebug("Getting {SetKey} string", setKey);
             var db = _redis.GetDatabase();
-            var value = db.StringGet(setKey);
+            var value = await db.StringGetAsync(setKey);
             if (value.IsNullOrEmpty) return string.Empty;
             return value;
         }
 
-        public void SetString(string setKey, string value, TimeSpan? expiry = null)
+        public async Task SetStringAsync(string setKey, string value, TimeSpan? expiry = null)
         {
             if (expiry == null)
                 _logger.LogDebug("Setting {SetKey} string to {Value}", setKey, value);
             else
                 _logger.LogDebug("Setting {SetKey} string to {Value} with expiry {Duration}", setKey, value, expiry.Value.Describe());
             var db = _redis.GetDatabase();
-            db.StringSet(setKey, value, expiry);
+            await db.StringSetAsync(setKey, value, expiry);
         }
 
-        public long Count(string setKey)
+        public Task<long> CountAsync(string setKey)
         {
             _logger.LogDebug("Getting count of {SetKey}", setKey);
             var db = _redis.GetDatabase();
-            return db.SetLength(setKey);
+            return db.SetLengthAsync(setKey);
         }
 
-        public string Get(string setKey, string hashField)
+        public async Task<string> GetAsync(string setKey, string hashField)
         {
             _logger.LogDebug("Getting {HashField} value from {SetKey}", hashField, setKey);
-            var value = _redis.GetDatabase().HashGet(setKey, hashField);
+            var value = await _redis.GetDatabase().HashGetAsync(setKey, hashField);
             if (value.IsNullOrEmpty) return string.Empty;
             return value;
         }
 
-        public bool GetFlag(string setKey, string hashField)
+        public async Task<bool> GetFlagAsync(string setKey, string hashField)
         {
             _logger.LogDebug("Getting {HashField} flag from {SetKey}", hashField, setKey);
-            var value = _redis.GetDatabase().HashGet(setKey, hashField);
+            var value = await _redis.GetDatabase().HashGetAsync(setKey, hashField);
             if (value.IsNullOrEmpty) return false;
             return value == Constants.TRUE;
         }
 
-        public string[] HashFields(string setKey)
+        public async Task<string[]> HashFieldsAsync(string setKey)
         {
             _logger.LogDebug("Getting {SetKey} hash fields", setKey);
-            return _redis.GetDatabase().HashKeys(setKey).ToStringArray();
+            return (await _redis.GetDatabase().HashKeysAsync(setKey)).ToStringArray();
         }
 
         public List<Models.HashEntry> HashScan(string setKey, string hashFieldPattern)
@@ -88,32 +89,32 @@ namespace RecipeShelf.Data.VPC.Proxies
             return entries;
         }
 
-        public bool IsMember(string setKey, string value)
+        public Task<bool> IsMemberAsync(string setKey, string value)
         {
             _logger.LogDebug("Checking if {Value} is member of {SetKey}", value, setKey);
-            return _redis.GetDatabase().SetContains(setKey, value);
+            return _redis.GetDatabase().SetContainsAsync(setKey, value);
         }
 
-        public string[] Members(string setKey)
+        public async Task<string[]> MembersAsync(string setKey)
         {
             _logger.LogDebug("Getting {SetKey} members", setKey);
-            return _redis.GetDatabase().SetMembers(setKey).ToStringArray();
+            return (await _redis.GetDatabase().SetMembersAsync(setKey)).ToStringArray();
         }
 
-        public string[] RandomMembers(string setKey, int count)
+        public async Task<string[]> RandomMembersAsync(string setKey, int count)
         {
             _logger.LogDebug("Getting {Count} random members from {SetKey}", count, setKey);
             var db = _redis.GetDatabase();
             if (count == 1)
             {
-                var value = db.SetRandomMember(setKey);
+                var value = await db.SetRandomMemberAsync(setKey);
                 if (value.IsNullOrEmpty) return new string[0];
                 return new string[] { value };
             }
-            return db.SetRandomMembers(setKey, count).ToStringArray();
+            return (await db.SetRandomMembersAsync(setKey, count)).ToStringArray();
         }
 
-        public void Store(IEnumerable<IEntry> batch)
+        public async Task StoreAsync(IEnumerable<IEntry> batch)
         {
             var db = _redis.GetDatabase();
             var transaction = db.CreateTransaction();
@@ -128,15 +129,15 @@ namespace RecipeShelf.Data.VPC.Proxies
                         foreach (var setName in setEntry.SortedSetNames)
                         {
                             if (string.IsNullOrEmpty(setName)) continue;
-                            transaction.SetAddAsync(setEntry.SetPrefix, setName);
+                            await transaction.SetAddAsync(setEntry.SetPrefix, setName);
                             count++;
                         }
                     }
-                    foreach (var setName in Members(setEntry.SetPrefix))
+                    foreach (var setName in await MembersAsync(setEntry.SetPrefix))
                     {
                         if (setEntry.SortedSetNames == null || Array.BinarySearch(setEntry.SortedSetNames, setName) < 0)
                         {
-                            transaction.SetRemoveAsync(setEntry.SetPrefix.Append(setName), setEntry.Value);
+                            await transaction.SetRemoveAsync(setEntry.SetPrefix.Append(setName), setEntry.Value);
                             count++;
                         }
                     }
@@ -145,7 +146,7 @@ namespace RecipeShelf.Data.VPC.Proxies
                         foreach (var setName in setEntry.SortedSetNames)
                         {
                             if (string.IsNullOrEmpty(setName)) continue;
-                            transaction.SetAddAsync(setEntry.SetPrefix.Append(setName), setEntry.Value);
+                            await transaction.SetAddAsync(setEntry.SetPrefix.Append(setName), setEntry.Value);
                             count++;
                         }
                     }
@@ -154,23 +155,23 @@ namespace RecipeShelf.Data.VPC.Proxies
                 {
                     var hashEntry = (Models.HashEntry)entry;
                     if (string.IsNullOrEmpty(hashEntry.Value))
-                        transaction.HashDeleteAsync(hashEntry.SetKey, hashEntry.HashField);
+                        await transaction.HashDeleteAsync(hashEntry.SetKey, hashEntry.HashField);
                     else
-                        transaction.HashSetAsync(hashEntry.SetKey, hashEntry.HashField, hashEntry.Value);
+                        await transaction.HashSetAsync(hashEntry.SetKey, hashEntry.HashField, hashEntry.Value);
                     count++;
                 }
             }
             _logger.LogDebug("Executing transaction with {Count} commands");
-            transaction.Execute();
+            await transaction.ExecuteAsync();
         }
 
-        public string Combine(CombineOptions key)
+        public async Task<string> CombineAsync(CombineOptions key)
         {
             var keys = new RedisKey[key.SetKeys.Length];
             for (var i = 0; i < keys.Length; i++) keys[i] = key.SetKeys[i];
             var setOp = key.Op == LogicalOperator.And ? SetOperation.Intersect : SetOperation.Union;
             _logger.LogDebug("Running {Operation} into {Destination}", setOp.ToString(), key.Destination);
-            _redis.GetDatabase().SetCombineAndStore(setOp, key.Destination, keys);
+            await _redis.GetDatabase().SetCombineAndStoreAsync(setOp, key.Destination, keys);
             return key.Destination;
         }
 

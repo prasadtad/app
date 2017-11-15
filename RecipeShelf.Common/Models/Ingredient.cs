@@ -35,6 +35,11 @@ namespace RecipeShelf.Common.Models
             Vegan = vegan;
         }
 
+        public Ingredient With(DateTime? lastModified = null, string[] names = null, string description = null, string category = null, bool? vegan = null)
+        {
+            return new Ingredient(Id, lastModified ?? LastModified, names ?? Names, description ?? Description, category ?? Category, vegan ?? Vegan);
+        }
+
         public bool Equals(Ingredient other)
         {
             return Equals(other, this);

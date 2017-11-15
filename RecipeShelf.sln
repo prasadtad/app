@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RecipeShelf.Web", "RecipeSh
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RecipeShelf.Common", "RecipeShelf.Common\RecipeShelf.Common.csproj", "{A4AFF027-A240-4C80-BD9E-2575E5489691}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RecipeShelf.Data.Server", "RecipeShelf.Data.Server\RecipeShelf.Data.Server.csproj", "{5E01612B-669F-4504-9A97-9E28A25F24F0}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RecipeShelf.Data.VPC", "RecipeShelf.Data.VPC\RecipeShelf.Data.VPC.csproj", "{EE56F8EA-3ACD-4559-A22D-EB836E242A06}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RecipeShelf.Tests", "RecipeShelf.Tests\RecipeShelf.Tests.csproj", "{D1B9605D-BD43-4E2E-8DA7-F6238DCCD60E}"
@@ -27,10 +25,6 @@ Global
 		{A4AFF027-A240-4C80-BD9E-2575E5489691}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A4AFF027-A240-4C80-BD9E-2575E5489691}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A4AFF027-A240-4C80-BD9E-2575E5489691}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5E01612B-669F-4504-9A97-9E28A25F24F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5E01612B-669F-4504-9A97-9E28A25F24F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5E01612B-669F-4504-9A97-9E28A25F24F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5E01612B-669F-4504-9A97-9E28A25F24F0}.Release|Any CPU.Build.0 = Release|Any CPU
 		{EE56F8EA-3ACD-4559-A22D-EB836E242A06}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{EE56F8EA-3ACD-4559-A22D-EB836E242A06}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EE56F8EA-3ACD-4559-A22D-EB836E242A06}.Release|Any CPU.ActiveCfg = Release|Any CPU

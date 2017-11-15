@@ -3,7 +3,6 @@ using Newtonsoft.Json;
 using RecipeShelf.Common;
 using RecipeShelf.Common.Models;
 using RecipeShelf.Common.Proxies;
-using RecipeShelf.Data.Server.Proxies;
 using RecipeShelf.Data.VPC;
 using System;
 using System.Threading.Tasks;
@@ -12,8 +11,6 @@ namespace RecipeShelf.Web
 {
     public interface IRecipeRepository : IRepository
     {
-        Task<RepositoryResponse<Recipe>> GetAsync(string id);
-
         Task<RepositoryResponse<string>> CreateAsync(Recipe recipe);
 
         Task<RepositoryResponse<bool>> UpdateAsync(string id, Recipe recipe);
@@ -23,21 +20,9 @@ namespace RecipeShelf.Web
     {
         private RecipeCache RecipeCache { get { return (RecipeCache)Cache; } }
 
-        private readonly IngredientCache IngredientCache;
-
-        public RecipeRepository(ILogger<RecipeRepository> logger, IFileProxy fileProxy, INoSqlDbProxy noSqlDbProxy, IMarkdownProxy markdownProxy, IngredientCache ingredientCache, RecipeCache recipeCache) :
-            base(logger, fileProxy, noSqlDbProxy, markdownProxy, recipeCache)
+        public RecipeRepository(ILogger<RecipeRepository> logger, IFileProxy fileProxy, RecipeCache recipeCache) :
+            base(logger, fileProxy, recipeCache)
         {
-            IngredientCache = ingredientCache;
-        }
-
-        public Task<RepositoryResponse<Recipe>> GetAsync(string id)
-        {
-            return ExecuteAsync(async () =>
-            {
-                if (!Cache.Exists(id)) return new RepositoryResponse<Recipe>(error: "Recipe " + id + " does not exist");
-                return new RepositoryResponse<Recipe>(await NoSqlDbProxy.GetRecipeAsync(id));
-            }, "Cannot get Recipe " + id, Sources.Cache | Sources.NoSql);
         }
 
         public Task<RepositoryResponse<string>> CreateAsync(Recipe recipe)
@@ -46,8 +31,8 @@ namespace RecipeShelf.Web
             {
                 var newId = Helper.GenerateNewId();
                 // To avoid duplicate ids at all costs
-                while (Cache.Exists(newId)) newId = Helper.GenerateNewId();
-                await PutAsync(newId, recipe);
+                while (await Cache.ExistsAsync(newId)) newId = Helper.GenerateNewId();
+                await PutAsync(newId, recipe, null);
                 return newId;
             }, "Cannot create new Recipe", Sources.All);
         }
@@ -58,15 +43,15 @@ namespace RecipeShelf.Web
                 return Task.FromResult(new RepositoryResponse<bool>(error: "Id " + id + " mismatch"));
             return ExecuteAsync(async () =>
             {
-                if (!Cache.Exists(id)) return new RepositoryResponse<bool>(error: "Recipe " + id + " does not exist");
-                if (!Cache.TryLock(recipe.Id)) return new RepositoryResponse<bool>(error: "Recipe " + recipe.Id + " is already being changed");
+                if (!await Cache.ExistsAsync(id)) return new RepositoryResponse<bool>(error: "Recipe " + id + " does not exist");
+                if (!await Cache.TryLockAsync(recipe.Id)) return new RepositoryResponse<bool>(error: "Recipe " + recipe.Id + " is already being changed");
                 try
                 {
-                    await PutAsync(id, recipe, await NoSqlDbProxy.GetRecipeAsync(id));
+                    await PutAsync(id, recipe, (await FileProxy.GetTextAsync("recipes/" + id)).Text);
                 }
                 finally
                 {
-                    Cache.UnLock(recipe.Id);
+                    await Cache.UnLockAsync(recipe.Id);
                 }
                 return new RepositoryResponse<bool>(response: true);
             }, "Cannot update Recipe " + id, Sources.All);
@@ -74,108 +59,52 @@ namespace RecipeShelf.Web
 
         protected async override Task<RepositoryResponse<bool>> TryDeleteAsync(string id)
         {
-            if (!Cache.Exists(id)) return new RepositoryResponse<bool>(error: "Recipe " + id + " does not exist");
-            if (!Cache.TryLock(id)) return new RepositoryResponse<bool>(error: "Recipe " + id + " is already being changed");
+            if (!await Cache.ExistsAsync(id)) return new RepositoryResponse<bool>(error: "Recipe " + id + " does not exist");
+            if (!await Cache.TryLockAsync(id)) return new RepositoryResponse<bool>(error: "Recipe " + id + " is already being changed");
             try
             {
-                var oldRecipe = await NoSqlDbProxy.GetRecipeAsync(id);
+                var oldRecipe = (await FileProxy.GetTextAsync("recipes/" + id)).Text;
                 var key = "recipes/" + id;
                 await FileProxy.DeleteAsync(key);
                 try
                 {
-                    await NoSqlDbProxy.DeleteRecipeAsync(id);
+                    await RecipeCache.RemoveAsync(id);
                 }
                 catch (Exception)   // Rollback file
                 {
-                    await RollbackFileProxy(key, oldRecipe);
+                    await RollbackFileProxyAsync(key, oldRecipe);
                     throw;
-                }
-                try
-                {
-                    RecipeCache.Remove(id);
-                }
-                catch (Exception)   // Rollback nosql
-                {
-                    await RollbackFileProxy(key, oldRecipe);
-                    await RollbackNoSqlDbProxy(id, oldRecipe);
-                    throw;
-                }
-                try
-                {
-                    await MarkdownProxy.RemoveRecipeMarkdownAsync(id);
-                }
-                catch (Exception)   // Rollback nosql
-                {
-                    await RollbackFileProxy(key, oldRecipe);
-                    await RollbackNoSqlDbProxy(id, oldRecipe);
-                    RollbackCache(id, oldRecipe);
-                    throw;
-                }
+                }                
             }
             finally
             {
-                Cache.UnLock(id);
+                await Cache.UnLockAsync(id);
             }
             return new RepositoryResponse<bool>(response: true);
         }
 
-        private async Task PutAsync(string id, Recipe recipe, Recipe? oldRecipe = null)
+        private async Task PutAsync(string id, Recipe recipe, string oldRecipeJson)
         {
             var key = "recipes/" + id;
-            recipe = new Recipe(id, DateTime.UtcNow, recipe.Names, recipe.Description, recipe.Steps, recipe.TotalTimeInMinutes, recipe.Servings, recipe.Approved, recipe.SpiceLevel, recipe.Region, recipe.ChefId, recipe.ImageId, recipe.Ingredients, recipe.Cuisine, recipe.IngredientIds, recipe.OvernightPreparation, recipe.AccompanimentIds, recipe.Collections);
+            recipe = recipe.With(lastModified: DateTime.UtcNow);
             await FileProxy.PutTextAsync(key, JsonConvert.SerializeObject(recipe, Formatting.Indented));
             try
             {
-                await NoSqlDbProxy.PutRecipeAsync(recipe);
+                await RecipeCache.StoreAsync(recipe);
             }
             catch (Exception)   // Rollback file
             {
-                await RollbackFileProxy(key, oldRecipe);
+                await RollbackFileProxyAsync(key, oldRecipeJson);
                 throw;
-            }
-            try
-            {
-                RecipeCache.Store(recipe);
-            }
-            catch (Exception)   // Rollback nosql
-            {
-                await RollbackFileProxy(key, oldRecipe);
-                await RollbackNoSqlDbProxy(recipe.Id, oldRecipe);
-                throw;
-            }
-            try
-            {
-                await MarkdownProxy.PutRecipeMarkdownAsync(recipe);
-            }
-            catch (Exception)   // Rollback nosql
-            {
-                await RollbackFileProxy(key, oldRecipe);
-                await RollbackNoSqlDbProxy(recipe.Id, oldRecipe);
-                RollbackCache(recipe.Id, oldRecipe);
-                throw;
-            }
+            }            
         }
 
-        private async Task RollbackFileProxy(string key, Recipe? oldRecipe)
+        private async Task RollbackFileProxyAsync(string key, string oldRecipeJson)
         {
-            if (oldRecipe == null)
+            if (string.IsNullOrEmpty(oldRecipeJson))
                 await FileProxy.DeleteAsync(key);
             else
-                await FileProxy.PutTextAsync(key, JsonConvert.SerializeObject(oldRecipe.Value, Formatting.Indented));
-        }
-
-        private async Task RollbackNoSqlDbProxy(string id, Recipe? oldRecipe)
-        {
-            if (oldRecipe == null)
-                await NoSqlDbProxy.DeleteRecipeAsync(id);
-            else
-                await NoSqlDbProxy.PutRecipeAsync(oldRecipe.Value);
-        }
-
-        private void RollbackCache(string id, Recipe? oldRecipe)
-        {
-            RecipeCache.Remove(id);
-            if (oldRecipe != null) RecipeCache.Store(oldRecipe.Value);
+                await FileProxy.PutTextAsync(key, oldRecipeJson);
         }
     }
 }

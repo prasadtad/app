@@ -4,9 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RecipeShelf.Common;
-using RecipeShelf.Data;
 using RecipeShelf.Data.VPC;
-using RecipeShelf.Data.Server;
 
 namespace RecipeShelf.Web
 {
@@ -32,7 +30,6 @@ namespace RecipeShelf.Web
             services.AddOptions()
                     .AddCommon(recipeshelfConfiguration)
                     .AddVPCData(recipeshelfConfiguration)
-                    .AddServerData(recipeshelfConfiguration)
                     .AddMvc();
             AddWeb(services, recipeshelfConfiguration);
         }
@@ -54,7 +51,7 @@ namespace RecipeShelf.Web
 
         private void AddWeb(IServiceCollection services, IConfigurationSection recipeshelfConfiguration)
         {
-            services.AddSingleton<IIngredientRepository, IngredientRepository>();
+            services.AddSingleton<IRecipeRepository, RecipeRepository>();
         }
     }
 }

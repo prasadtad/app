@@ -1,7 +1,8 @@
-﻿using RecipeShelf.Data.VPC.Models;
-using RecipeShelf.Common.Models;
+﻿using RecipeShelf.Common.Models;
+using RecipeShelf.Data.VPC.Models;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace RecipeShelf.Data.VPC.Proxies
 {
@@ -34,30 +35,30 @@ namespace RecipeShelf.Data.VPC.Proxies
 
     public interface ICacheProxy
     {
-        string GetString(string setKey);
+        bool CanConnect();
 
-        void SetString(string setKey, string value, TimeSpan? expiry = null);
+        Task<string> CombineAsync(CombineOptions key);
 
-        string Combine(CombineOptions options);
+        Task<long> CountAsync(string setKey);
 
-        long Count(string setKey);
+        Task<string> GetAsync(string setKey, string hashField);
 
-        string Get(string setKey, string hashField);
+        Task<bool> GetFlagAsync(string setKey, string hashField);
 
-        bool GetFlag(string setKey, string hashField);
+        Task<string> GetStringAsync(string setKey);
 
-        string[] HashFields(string setKey);
+        Task<string[]> HashFieldsAsync(string setKey);
 
         List<HashEntry> HashScan(string setKey, string hashFieldPattern);
 
-        bool IsMember(string vegan, string id);
+        Task<bool> IsMemberAsync(string setKey, string value);
 
-        string[] Members(string setKey);
+        Task<string[]> MembersAsync(string setKey);
 
-        string[] RandomMembers(string setKey, int count);
+        Task<string[]> RandomMembersAsync(string setKey, int count);
 
-        void Store(IEnumerable<IEntry> batch);
+        Task SetStringAsync(string setKey, string value, TimeSpan? expiry = null);
 
-        bool CanConnect();
+        Task StoreAsync(IEnumerable<IEntry> batch);
     }
 }

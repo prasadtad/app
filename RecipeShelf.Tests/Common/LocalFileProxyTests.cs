@@ -56,7 +56,7 @@ namespace RecipeShelf.Tests.Common
         [Fact]
         public async Task GetTextTestAsync()
         {
-            Assert.Equal("TestData1", await _localFileProxy.GetTextAsync(_folder + "\\File1.txt"));
+            Assert.Equal("TestData1", (await _localFileProxy.GetTextAsync(_folder + "\\File1.txt")).Text);
         }
 
         [Fact]

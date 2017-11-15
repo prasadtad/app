@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using RecipeShelf.Common.Proxies;
-using RecipeShelf.Data.Server.Proxies;
 using RecipeShelf.Data.VPC;
 using System;
 using System.Threading.Tasks;
@@ -11,8 +10,6 @@ namespace RecipeShelf.Web
 {
     public interface IRepository
     {
-        Task<RepositoryResponse<string[]>> AllIdsAsync();
-
         Task<RepositoryResponse<bool>> DeleteAsync(string id);
     }
 
@@ -21,21 +18,12 @@ namespace RecipeShelf.Web
         protected readonly Cache Cache;
         protected readonly ILogger Logger;
         protected readonly IFileProxy FileProxy;
-        protected readonly INoSqlDbProxy NoSqlDbProxy;
-        protected readonly IMarkdownProxy MarkdownProxy;
 
-        protected Repository(ILogger logger, IFileProxy fileProxy, INoSqlDbProxy noSqlDbProxy, IMarkdownProxy markdownProxy, Cache cache)
+        protected Repository(ILogger logger, IFileProxy fileProxy, Cache cache)
         {
             Logger = logger;
             FileProxy = fileProxy;
-            NoSqlDbProxy = noSqlDbProxy;
-            MarkdownProxy = markdownProxy;
             Cache = cache;
-        }
-
-        public Task<RepositoryResponse<string[]>> AllIdsAsync()
-        {
-            return ExecuteAsync(Cache.All, "Cannot get all " + Cache.Table, Sources.Cache);            
         }
 
         public Task<RepositoryResponse<bool>> DeleteAsync(string id)
@@ -128,19 +116,9 @@ namespace RecipeShelf.Web
                 Logger.LogError("Cannot connect to Files");
                 return error;
             }
-            if ((sources == Sources.All || sources.HasFlag(Sources.NoSql)) && !await NoSqlDbProxy.CanConnectAsync())
-            {
-                Logger.LogError("Cannot connect to NoSql");
-                return error;
-            }
             if ((sources == Sources.All || sources.HasFlag(Sources.Cache)) && !Cache.CanConnect())
             {
                 Logger.LogError("Cannot connect to Cache");
-                return error;
-            }
-            if ((sources == Sources.All || sources.HasFlag(Sources.Markdown)) && !MarkdownProxy.CanConnect())
-            {
-                Logger.LogError("Cannot connect to Markdown");
                 return error;
             }
             return string.Empty;
@@ -158,9 +136,7 @@ namespace RecipeShelf.Web
     {
         All = 0,
         Cache = 1,
-        File = 2,
-        NoSql = 4,
-        Markdown = 8
+        File = 2
     }
 
     public struct RepositoryResponse<T>

@@ -73,16 +73,16 @@ namespace RecipeShelf.Common.Models
         [JsonProperty("collections", NullValueHandling = NullValueHandling.Ignore)]
         public string[] Collections { get; }
 
-        public Recipe(string id, 
-                      DateTime lastModified, 
-                      string[] names, 
-                      string description, 
-                      RecipeItem[] steps, 
-                      int totalTimeInMinutes, 
-                      string servings, 
-                      bool approved, 
-                      SpiceLevel spiceLevel, 
-                      string region, 
+        public Recipe(string id,
+                      DateTime lastModified,
+                      string[] names,
+                      string description,
+                      RecipeItem[] steps,
+                      int totalTimeInMinutes,
+                      string servings,
+                      bool approved,
+                      SpiceLevel spiceLevel,
+                      string region,
                       string chefId,
                       string imageId,
                       RecipeItem[] ingredients,
@@ -110,6 +110,44 @@ namespace RecipeShelf.Common.Models
             OvernightPreparation = overnightPreparation;
             AccompanimentIds = accompanimentIds;
             Collections = collections;
+        }
+
+        public Recipe With(DateTime? lastModified = null,
+                           string[] names = null,
+                           string description = null,
+                           RecipeItem[] steps = null,
+                           int? totalTimeInMinutes = null,
+                           string servings = null,
+                           bool? approved = null,
+                           SpiceLevel? spiceLevel = null,
+                           string region = null,
+                           string chefId = null,
+                           string imageId = null,
+                           RecipeItem[] ingredients = null,
+                           string cuisine = null,
+                           string[] ingredientIds = null,
+                           bool? overnightPreparation = null,
+                           string[] accompanimentIds = null,
+                           string[] collections = null)
+        {
+            return new Recipe(Id,
+                              lastModified ?? LastModified,
+                              names ?? Names,
+                              description ?? Description,
+                              steps ?? Steps,
+                              totalTimeInMinutes ?? TotalTimeInMinutes,
+                              servings ?? Servings,
+                              approved ?? Approved,
+                              spiceLevel ?? SpiceLevel,
+                              region ?? Region,
+                              chefId ?? ChefId,
+                              imageId ?? ImageId,
+                              ingredients ?? Ingredients,
+                              cuisine ?? Cuisine,
+                              ingredientIds ?? IngredientIds,
+                              overnightPreparation ?? OvernightPreparation,
+                              accompanimentIds ?? AccompanimentIds,
+                              collections ?? Collections);
         }
 
         public bool Equals(Recipe other)
@@ -144,9 +182,9 @@ namespace RecipeShelf.Common.Models
 
         public override int GetHashCode()
         {
-            return Extensions.GetHashCode(Id, 
-                                          LastModified, 
-                                          Names, 
+            return Extensions.GetHashCode(Id,
+                                          LastModified,
+                                          Names,
                                           Description,
                                           Steps,
                                           TotalTimeInMinutes,

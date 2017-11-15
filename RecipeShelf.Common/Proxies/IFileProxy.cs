@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using RecipeShelf.Common.Models;
+using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace RecipeShelf.Common.Proxies
@@ -9,7 +11,7 @@ namespace RecipeShelf.Common.Proxies
 
         Task<IEnumerable<string>> ListKeysAsync(string folder);
 
-        Task<string> GetTextAsync(string key);
+        Task<FileText> GetTextAsync(string key, DateTime? since = null);
 
         Task PutTextAsync(string key, string text);
 
