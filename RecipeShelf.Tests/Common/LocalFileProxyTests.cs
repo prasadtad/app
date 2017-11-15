@@ -62,7 +62,7 @@ namespace RecipeShelf.Tests.Common
             var fileText2 = await _localFileProxy.GetTextAsync(filename, fileText.LastModified);
             Assert.Null(fileText2.Text);
             Assert.Equal(fileText.LastModified, fileText2.LastModified);
-            await Task.Delay(500);
+            await Task.Delay(1000);
             await File.WriteAllTextAsync(_file1Path, "TestData1x");
             var fileText3 = await _localFileProxy.GetTextAsync(filename, fileText2.LastModified);
             Assert.NotNull(fileText3.Text);
