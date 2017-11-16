@@ -20,7 +20,14 @@ namespace RecipeShelf.Data.VPC.Proxies
         {
             _logger = logger;
             _settings = optionsAccessor.Value;
-            _redis = ConnectionMultiplexer.Connect(_settings.CacheEndpoint);
+            _redis = ConnectionMultiplexer.Connect(_settings.CacheEndpoint + ",allowAdmin=true");
+        }
+
+        public async Task FlushAsync()
+        {
+            _logger.LogDebug("Flushing database");
+            var server = _redis.GetServer(_settings.CacheEndpoint);
+            await server.FlushDatabaseAsync();
         }
 
         public async Task<string> GetStringAsync(string setKey)

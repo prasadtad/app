@@ -94,6 +94,11 @@ namespace RecipeShelf.Data.VPC
             await CacheProxy.StoreAsync(batch);
         }
 
+        public async Task FlushAsync()
+        {
+            await CacheProxy.FlushAsync();
+        }
+
         public async Task RemoveAsync(string id)
         {
             Logger.LogDebug("Removing Recipe {Id} from cache", id);

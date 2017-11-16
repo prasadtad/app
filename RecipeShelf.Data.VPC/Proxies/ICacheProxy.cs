@@ -37,6 +37,8 @@ namespace RecipeShelf.Data.VPC.Proxies
     {
         bool CanConnect();
 
+        Task FlushAsync();
+
         Task<string> CombineAsync(CombineOptions key);
 
         Task<long> CountAsync(string setKey);

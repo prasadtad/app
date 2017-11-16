@@ -37,5 +37,11 @@ namespace RecipeShelf.Web.Controllers
         {
             return (await _recipeRepository.ResetCacheAsync()).ToActionResult();
         }
+
+        [HttpGet("searchnames")]
+        public async Task<IActionResult> SearchNames([FromQuery] string sentence)
+        {
+            return (await _recipeRepository.SearchNamesAsync(sentence)).ToActionResult();
+        }
     }
 }

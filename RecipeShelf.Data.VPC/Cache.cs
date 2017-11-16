@@ -108,10 +108,10 @@ namespace RecipeShelf.Data.VPC
             for (var i = 0; i < chars.Length; i++)
             {
                 patterns.Add(new string(chars, 0, i) + new string(chars, i + 1, chars.Length - i - 1));
-                patterns.Add(new string(chars, 0, i) + "?" + new string(chars, i, chars.Length - i));
-                patterns.Add(new string(chars, 0, i) + "?" + new string(chars, i + 1, chars.Length - i - 1));
+                patterns.Add(new string(chars, 0, i) + "*" + new string(chars, i, chars.Length - i));
+                patterns.Add(new string(chars, 0, i) + "*" + new string(chars, i + 1, chars.Length - i - 1));
             }
-            patterns.Add(word + "?");
+            patterns.Add(word + "*");
             return patterns;
         }
     }

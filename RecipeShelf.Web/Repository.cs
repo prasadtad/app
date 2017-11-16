@@ -56,7 +56,7 @@ namespace RecipeShelf.Web
         protected async Task<RepositoryResponse<T>> ExecuteAsync<T>(Lazy<Task<T>> data, string error, Sources sources)
         {
             try
-            {
+            {                
                 var connectError = await CanConnectAsync(error, sources);
                 if (!string.IsNullOrEmpty(connectError)) return new RepositoryResponse<T>(error: connectError);
                 return new RepositoryResponse<T>(response: await data.Value);

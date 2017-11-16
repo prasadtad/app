@@ -5,6 +5,7 @@ using RecipeShelf.Common.Models;
 using RecipeShelf.Common.Proxies;
 using RecipeShelf.Data.VPC;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
@@ -16,7 +17,9 @@ namespace RecipeShelf.Web
 
         Task<RepositoryResponse<bool>> UpdateAsync(string id, Recipe recipe);
 
-        Task<RepositoryResponse<string>> ResetCacheAsync();
+        Task<RepositoryResponse<bool>> ResetCacheAsync();
+
+        Task<RepositoryResponse<IEnumerable<string>>> SearchNamesAsync(string sentence);
     }
 
     public class RecipeRepository : Repository, IRecipeRepository
@@ -60,18 +63,23 @@ namespace RecipeShelf.Web
             }, "Cannot update Recipe " + id, Sources.All);
         }
 
-        public Task<RepositoryResponse<string>> ResetCacheAsync()
+        public Task<RepositoryResponse<bool>> ResetCacheAsync()
         {
             return ExecuteAsync(async () =>
             {
-                var sw = Stopwatch.StartNew();
+                await RecipeCache.FlushAsync();
                 foreach (var key in await FileProxy.ListKeysAsync("recipes"))
                 {
                     var recipe = JsonConvert.DeserializeObject<Recipe>((await FileProxy.GetTextAsync(key)).Text);
                     await RecipeCache.StoreAsync(recipe);
                 }
-                return new RepositoryResponse<string>(response: "Updating cache took " + sw.Elapsed.Describe());
-            }, "Cannot reset recipes cache", Sources.All);
+                return new RepositoryResponse<bool>(response: true);
+            }, "Cannot reset Recipe Cache", Sources.All);
+        }
+
+        public Task<RepositoryResponse<IEnumerable<string>>> SearchNamesAsync(string sentence)
+        {
+            return ExecuteAsync(() => RecipeCache.SearchNames(sentence), "Cannot search Recipe Names for " + sentence, Sources.Cache);
         }
 
         protected async override Task<RepositoryResponse<bool>> TryDeleteAsync(string id)
