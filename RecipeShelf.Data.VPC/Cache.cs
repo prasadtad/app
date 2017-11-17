@@ -49,7 +49,7 @@ namespace RecipeShelf.Data.VPC
 
         public async Task<bool> ExistsAsync(string id) => !string.IsNullOrEmpty(await CacheProxy.GetAsync(NamesKey, id));
 
-        public Task<string[]> AllAsync() => CacheProxy.HashFieldsAsync(NamesKey);
+        public async Task<IEnumerable<string>> AllAsync() => await CacheProxy.HashFieldsAsync(NamesKey);
 
         protected async Task<IEnumerable<IEntry>> CreateSearchPhrasesAsync(string id, string[] oldNames, string[] newNames)
         {

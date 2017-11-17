@@ -26,9 +26,9 @@ namespace RecipeShelf.Data.VPC
             _ingredientsCache = ingredientsCache;
         }
 
-        public Task<string[]> ByChefAsync(string chefId) => CacheProxy.MembersAsync(KeyRegistry.Recipes.ChefId.Append(chefId));
+        public async Task<IEnumerable<string>> ByChefAsync(string chefId) => await CacheProxy.MembersAsync(KeyRegistry.Recipes.ChefId.Append(chefId));
 
-        public async Task<string[]> ByFilterAsync(RecipeFilter filter)
+        public async Task<IEnumerable<string>> FilterAsync(RecipeFilter filter)
         {
             var keys = new List<string>();
             if (filter.Vegan != null) keys.Add(KeyRegistry.Recipes.Vegan.Append(filter.Vegan.Value));
@@ -45,13 +45,13 @@ namespace RecipeShelf.Data.VPC
 
         public Task<bool> IsVeganAsync(string id) => CacheProxy.IsMemberAsync(KeyRegistry.Recipes.Vegan.Append(true), id);
 
-        public Task<string[]> GetChefsAsync() => CacheProxy.MembersAsync(KeyRegistry.Recipes.ChefId);
+        public async Task<IEnumerable<string>> GetChefsAsync() => await CacheProxy.MembersAsync(KeyRegistry.Recipes.ChefId);
 
-        public Task<string[]> GetCollectionsAsync() => CacheProxy.MembersAsync(KeyRegistry.Recipes.Collection);
+        public async Task<IEnumerable<string>> GetCollectionsAsync() => await CacheProxy.MembersAsync(KeyRegistry.Recipes.Collection);
 
-        public Task<string[]> GetCuisinesAsync() => CacheProxy.MembersAsync(KeyRegistry.Recipes.Cuisine);
+        public async Task<IEnumerable<string>> GetCuisinesAsync() => await CacheProxy.MembersAsync(KeyRegistry.Recipes.Cuisine);
 
-        public Task<string[]> GetRegionsAsync() => CacheProxy.MembersAsync(KeyRegistry.Recipes.Region);
+        public async Task<IEnumerable<string>> GetRegionsAsync() => await CacheProxy.MembersAsync(KeyRegistry.Recipes.Region);
 
         public Task<long> GetCountForCollectionAsync(string collection)
         {
@@ -78,8 +78,6 @@ namespace RecipeShelf.Data.VPC
             var batch = new List<IEntry>
             {
                 new HashEntry(KeyRegistry.Recipes.Names, recipe.Id, string.Join(Environment.NewLine, recipe.Names)),
-                // Store list of ingredientIds with recipeId as key
-                new HashEntry(KeyRegistry.Ingredients.RecipeId, recipe.Id, string.Join(",", recipe.IngredientIds)),
                 new SetEntry(KeyRegistry.Recipes.Vegan, vegan, recipe.Id),
                 new SetEntry(KeyRegistry.Recipes.IngredientId, recipe.IngredientIds, recipe.Id),
                 new SetEntry(KeyRegistry.Recipes.OvernightPreparation, recipe.OvernightPreparation, recipe.Id),

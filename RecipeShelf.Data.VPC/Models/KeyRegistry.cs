@@ -2,25 +2,6 @@
 
 namespace RecipeShelf.Data.VPC.Models
 {
-    public sealed class IngredientKeys
-    {
-        public const KeyType Type = KeyType.Ingredient;
-
-        public const string DEFAULT_CATEGORY = "Miscellaneous";
-
-        public readonly string Names = Type.Append("Names");
-        public readonly string Category = Type.Append("Category");
-        public readonly string RecipeId = Type.Append("RecipeId");
-
-        public readonly string Vegan = Type.Append("Vegan");
-
-        public readonly string SearchWords = Type.Append("SearchWords");
-
-        public readonly string RecentSearches = Type.Append("RecentSearches");
-
-        public readonly string Locks = Type.Append("Locks");
-    }
-
     public sealed class RecipeKeys
     {
         public const KeyType Type = KeyType.Recipe;
@@ -45,8 +26,6 @@ namespace RecipeShelf.Data.VPC.Models
 
     public static class KeyRegistry
     {
-        public static readonly IngredientKeys Ingredients = new IngredientKeys();
-
         public static readonly RecipeKeys Recipes = new RecipeKeys();
     }
 }

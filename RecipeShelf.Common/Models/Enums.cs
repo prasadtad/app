@@ -23,8 +23,7 @@
 
     public enum KeyType
     {
-        Recipe,
-        Ingredient
+        Recipe
     }
 
     public enum TotalTime

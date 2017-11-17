@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RecipeShelf.Common.Models;
+using RecipeShelf.Data.VPC.Models;
 using System.Threading.Tasks;
 
 namespace RecipeShelf.Web.Controllers
@@ -42,6 +43,12 @@ namespace RecipeShelf.Web.Controllers
         public async Task<IActionResult> SearchNames([FromQuery] string sentence)
         {
             return (await _recipeRepository.SearchNamesAsync(sentence)).ToActionResult();
+        }
+
+        [HttpPost("filter")]
+        public async Task<IActionResult> Filter([FromBody]RecipeFilter filter)
+        {
+            return (await _recipeRepository.FilterAsync(filter)).ToActionResult();
         }
     }
 }

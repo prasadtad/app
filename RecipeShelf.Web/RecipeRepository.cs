@@ -4,9 +4,9 @@ using RecipeShelf.Common;
 using RecipeShelf.Common.Models;
 using RecipeShelf.Common.Proxies;
 using RecipeShelf.Data.VPC;
+using RecipeShelf.Data.VPC.Models;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace RecipeShelf.Web
@@ -20,6 +20,8 @@ namespace RecipeShelf.Web
         Task<RepositoryResponse<bool>> ResetCacheAsync();
 
         Task<RepositoryResponse<IEnumerable<string>>> SearchNamesAsync(string sentence);
+
+        Task<RepositoryResponse<IEnumerable<string>>> FilterAsync(RecipeFilter filter);
     }
 
     public class RecipeRepository : Repository, IRecipeRepository
@@ -80,6 +82,11 @@ namespace RecipeShelf.Web
         public Task<RepositoryResponse<IEnumerable<string>>> SearchNamesAsync(string sentence)
         {
             return ExecuteAsync(() => RecipeCache.SearchNames(sentence), "Cannot search Recipe Names for " + sentence, Sources.Cache);
+        }
+
+        public Task<RepositoryResponse<IEnumerable<string>>> FilterAsync(RecipeFilter filter)
+        {
+            return ExecuteAsync(() => RecipeCache.FilterAsync(filter), "Cannot filter Recipes with " + JsonConvert.SerializeObject(filter, Formatting.Indented), Sources.Cache);
         }
 
         protected async override Task<RepositoryResponse<bool>> TryDeleteAsync(string id)

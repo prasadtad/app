@@ -4,30 +4,42 @@ using RecipeShelf.Common.Models;
 
 namespace RecipeShelf.Data.VPC.Models
 {
-    public sealed class RecipeFilter
+    public struct RecipeFilter
     {
         [JsonProperty("collections", NullValueHandling = NullValueHandling.Ignore)]
-        public string[] Collections { get; set; }
+        public string[] Collections { get; }
 
         [JsonProperty("cuisines", NullValueHandling = NullValueHandling.Ignore)]
-        public string[] Cuisines { get; set; }
+        public string[] Cuisines { get; }
 
         [JsonProperty("ingredientIds", NullValueHandling = NullValueHandling.Ignore)]
-        public string[] IngredientIds { get; set; }
+        public string[] IngredientIds { get; }
 
         [JsonProperty("overnightPreparation", NullValueHandling = NullValueHandling.Ignore)]
-        public bool? OvernightPreparation { get; set; }
+        public bool? OvernightPreparation { get; }
 
         [JsonProperty("regions", NullValueHandling = NullValueHandling.Ignore)]
-        public string[] Regions { get; set; }
+        public string[] Regions { get; }
 
         [JsonProperty("spiceLevels", NullValueHandling = NullValueHandling.Ignore, ItemConverterType = typeof(StringEnumConverter))]
-        public SpiceLevel[] SpiceLevels { get; set; }
+        public SpiceLevel[] SpiceLevels { get; }
 
         [JsonProperty("totalTimes", NullValueHandling = NullValueHandling.Ignore, ItemConverterType = typeof(StringEnumConverter))]
-        public TotalTime[] TotalTimes { get; set; }
+        public TotalTime[] TotalTimes { get; }
 
         [JsonProperty("vegan", NullValueHandling = NullValueHandling.Ignore)]
-        public bool? Vegan { get; set; }
+        public bool? Vegan { get; }
+
+        public RecipeFilter(string[] collections, string[] cuisines, string[] ingredientIds, bool? overnightPreparation, string[] regions, SpiceLevel[] spiceLevels, TotalTime[] totalTimes, bool? vegan)
+        {
+            Collections = collections;
+            Cuisines = cuisines;
+            IngredientIds = ingredientIds;
+            OvernightPreparation = overnightPreparation;
+            Regions = regions;
+            SpiceLevels = spiceLevels;
+            TotalTimes = totalTimes;
+            Vegan = vegan;
+        }
     }
 }
