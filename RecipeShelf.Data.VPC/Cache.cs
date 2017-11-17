@@ -27,7 +27,7 @@ namespace RecipeShelf.Data.VPC
             CacheProxy = cacheProxy;
             Logger = logger;
         }
-        
+
         public bool CanConnect()
         {
             return CacheProxy.CanConnect();
@@ -51,68 +51,65 @@ namespace RecipeShelf.Data.VPC
 
         public Task<string[]> AllAsync() => CacheProxy.HashFieldsAsync(NamesKey);
 
-        protected async Task<IEnumerable<IEntry>> CreateSearchWordEntriesAsync(string id, string oldNames, string[] names)
+        protected async Task<IEnumerable<IEntry>> CreateSearchPhrasesAsync(string id, string[] oldNames, string[] newNames)
         {
-            var newWords = names.SelectMany(Extensions.ToLowerCaseWords);
+            var entries = new Dictionary<string, IEntry>();
+            var newPhrases = newNames.SelectMany(GeneratePhrases);
 
-            var oldWords = oldNames.ToLowerCaseWords();
-
-            var entries = new List<IEntry>();
-
-            foreach (var oldWord in oldWords.Except(newWords))
+            foreach (var newPhrase in newPhrases)
             {
-                var ids = (await CacheProxy.GetAsync(SearchWordsKey, oldWord)).Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
-                if (!ids.Contains(id)) continue;
-                ids.Remove(id);
-                entries.Add(new HashEntry(SearchWordsKey, oldWord, string.Join(",", ids)));
-            };
-
-            foreach (var newWord in newWords)
-            {
-                var ids = (await CacheProxy.GetAsync(SearchWordsKey, newWord)).Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                var ids = (await CacheProxy.GetAsync(SearchWordsKey, newPhrase)).Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
                 if (ids.Contains(id)) continue;
                 ids.Add(id);
-                entries.Add(new HashEntry(SearchWordsKey, newWord, string.Join(",", ids)));
+                if (!entries.ContainsKey(newPhrase))
+                    entries.Add(newPhrase, new HashEntry(SearchWordsKey, newPhrase, string.Join(",", ids)));
             }
 
-            return entries;
+            foreach (var oldName in oldNames)
+            {
+                foreach (var oldPhrase in GeneratePhrases(oldName).Except(newPhrases))
+                {
+                    var ids = (await CacheProxy.GetAsync(SearchWordsKey, oldPhrase)).Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                    if (!ids.Contains(id)) continue;
+                    ids.Remove(id);
+                    entries.Add(oldPhrase, new HashEntry(SearchWordsKey, oldPhrase, string.Join(",", ids)));
+                }
+            }
+
+            return entries.Values;
         }
 
         public IEnumerable<string> SearchNames(string sentence)
         {
             Logger.LogDebug("Searching names for {Sentence}", sentence);
 
+            sentence = sentence.ToLower();
             var ids = new HashSet<string>();
-            foreach (var word in sentence.ToLowerCaseWords())
+            foreach (var pattern in GenerateKeyPatterns(sentence))
             {
-                foreach (var pattern in GenerateKeyPatterns(word))
+                var entries = CacheProxy.HashScan(SearchWordsKey, pattern);
+                foreach (var entry in entries)
                 {
-                    var entries = CacheProxy.HashScan(SearchWordsKey, pattern);
-                    foreach (var entry in entries)
-                    {
-                        var entryIds = entry.Value.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                        foreach (var id in entryIds)
-                            ids.Add(id);
-                    }
+                    var entryIds = entry.Value.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var id in entryIds)
+                        ids.Add(id);
                 }
-            }           
-            
+            }
+
             return ids;
         }
 
-        private HashSet<string> GenerateKeyPatterns(string word)
+        private string[] GeneratePhrases(string sentence)
         {
-            var patterns = new HashSet<string>();
-            patterns.Add(word);
-            var chars = word.ToCharArray();
-            for (var i = 0; i < chars.Length; i++)
-            {
-                patterns.Add(new string(chars, 0, i) + new string(chars, i + 1, chars.Length - i - 1));
-                patterns.Add(new string(chars, 0, i) + "*" + new string(chars, i, chars.Length - i));
-                patterns.Add(new string(chars, 0, i) + "*" + new string(chars, i + 1, chars.Length - i - 1));
-            }
-            patterns.Add(word + "*");
-            return patterns;
+            var phrases = sentence.ToLowerCaseWords();
+            for (var i = phrases.Length - 2; i >= 0; i--)
+                phrases[i] = (phrases[i] + " " + phrases[i + 1]).Trim();
+            return phrases;
+        }
+
+        private IEnumerable<string> GenerateKeyPatterns(string phrase)
+        {
+            return new[] { phrase, phrase + "*" };
         }
     }
 }

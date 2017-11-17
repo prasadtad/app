@@ -89,7 +89,7 @@ namespace RecipeShelf.Data.VPC
                 new SetEntry(KeyRegistry.Recipes.TotalTime, recipe.TotalTime.ToString(), recipe.Id),
                 new SetEntry(KeyRegistry.Recipes.Collection, recipe.Collections, recipe.Id)
             };
-            batch.AddRange(await CreateSearchWordEntriesAsync(recipe.Id, oldNames, recipe.Names));
+            batch.AddRange(await CreateSearchPhrasesAsync(recipe.Id, oldNames?.Split(Environment.NewLine) ?? new string[0], recipe.Names));
 
             await CacheProxy.StoreAsync(batch);
         }
@@ -117,7 +117,7 @@ namespace RecipeShelf.Data.VPC
                 new SetEntry(KeyRegistry.Recipes.TotalTime, id),
                 new SetEntry(KeyRegistry.Recipes.Collection, id)
             };
-            batch.AddRange(await CreateSearchWordEntriesAsync(id, oldNames, new string[0]));
+            batch.AddRange(await CreateSearchPhrasesAsync(id, oldNames?.Split(Environment.NewLine) ?? new string[0], new string[0]));
 
             await CacheProxy.StoreAsync(batch);
         }
