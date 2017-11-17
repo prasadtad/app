@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Caching.Memory;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using RecipeShelf.Common.Models;
@@ -12,17 +12,21 @@ namespace RecipeShelf.Common
 {
     public class IngredientsCache
     {
-        private readonly IMemoryCache _cache;
+        private readonly ILogger<IngredientsCache> _logger;
         private readonly IFileProxy _fileProxy;
         private readonly CommonSettings _settings;
 
-        private const string INGREDIENTS_CACHE_KEY = "IngredientsCacheKey";
-        private const string INGREDIENTS_CACHE_LASTMODIFIED_KEY = "IngredientsCacheLastModifiedKey";
+        private IDictionary<string, Ingredient> _ingredients;
+        private DateTime? _lastModified;
 
-        public IngredientsCache(IMemoryCache cache, IFileProxy fileProxy, IOptions<CommonSettings> optionsAccessor)
+        private DateTime _lastAccessed = DateTime.MinValue;
+
+        private const string INGREDIENTS_CACHE_KEY = "IngredientsCacheKey";
+
+        public IngredientsCache(IFileProxy fileProxy, ILogger<IngredientsCache> logger, IOptions<CommonSettings> optionsAccessor)
         {
-            _cache = cache;
             _fileProxy = fileProxy;
+            _logger = logger;
             _settings = optionsAccessor.Value;
         }
 
@@ -31,17 +35,25 @@ namespace RecipeShelf.Common
             return (await GetIngredientsAsync())[id];
         }
 
-        private Task<IDictionary<string, Ingredient>> GetIngredientsAsync()
+        private async Task<IDictionary<string, Ingredient>> GetIngredientsAsync()
         {
-            return _cache.GetOrCreateAsync(INGREDIENTS_CACHE_KEY, CreateAsync);
+            _logger.LogDebug("Getting ingredients dictionary from cache");
+            if (_ingredients == null || DateTime.Now.Subtract(_lastAccessed) > _settings.IngredientsCacheExpiration)
+            {
+                _ingredients = await CreateAsync();
+                _lastAccessed = DateTime.Now;
+            }
+            return _ingredients;
         }
 
-        private async Task<IDictionary<string, Ingredient>> CreateAsync(ICacheEntry ce)
+        private async Task<IDictionary<string, Ingredient>> CreateAsync()
         {
-            ce.SetAbsoluteExpiration(_settings.IngredientsCacheExpiration);
-            var fileText = await _fileProxy.GetTextAsync("ingredients.json", _cache.Get<DateTime?>(INGREDIENTS_CACHE_LASTMODIFIED_KEY));
-            _cache.Set<DateTime?>(INGREDIENTS_CACHE_LASTMODIFIED_KEY, fileText.LastModified);
-            return fileText.Text == null ? (IDictionary<string, Ingredient>)ce.Value : Deserialize(fileText.Text);
+            _logger.LogDebug("Creating ingredients dictionary");
+            var fileText = await _fileProxy.GetTextAsync("ingredients.json", _lastModified);
+            _lastModified = fileText.LastModified;
+            if (fileText.Text == null)
+                _logger.LogDebug("Ingredients file didn't change, using already cached one");
+            return fileText.Text == null ? _ingredients : Deserialize(fileText.Text);
         }
 
         private IDictionary<string, Ingredient> Deserialize(string json)

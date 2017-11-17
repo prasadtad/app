@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using RecipeShelf.Common;
 using RecipeShelf.Common.Models;
@@ -29,7 +28,7 @@ namespace RecipeShelf.Tests.Common
                 new Ingredient("b", DateTime.Now.AddMinutes(-2), new[] { "B" }, "B1", "Y", true)
             };
             await File.WriteAllTextAsync(Path.Combine(_localFileProxyFolder, "ingredients.json"), JsonConvert.SerializeObject(ingredients));
-            
+
             var fileProxy = new LocalFileProxy(new MockLogger<LocalFileProxy>(), new MockOptions<CommonSettings>(
                                          new CommonSettings
                                          {
@@ -37,14 +36,14 @@ namespace RecipeShelf.Tests.Common
                                              LocalFileProxyFolder = _localFileProxyFolder
                                          }));
 
-            var ingredientsCache = new IngredientsCache(new MemoryCache(new MemoryCacheOptions()), fileProxy, new MockOptions<CommonSettings>(new CommonSettings
+            var ingredientsCache = new IngredientsCache(fileProxy, new MockLogger<IngredientsCache>(), new MockOptions<CommonSettings>(new CommonSettings
             {
                 IngredientsCacheExpiration = TimeSpan.FromMilliseconds(500)
             }));
 
             var ingredient = await ingredientsCache.GetAsync("b");
-            Assert.Equal("B1",ingredient.Description);
-            
+            Assert.Equal("B1", ingredient.Description);
+
             ingredients.Remove(ingredient);
             ingredients.Add(ingredient.With(description: "B2"));
             await File.WriteAllTextAsync(Path.Combine(_localFileProxyFolder, "ingredients.json"), JsonConvert.SerializeObject(ingredients));
@@ -52,9 +51,9 @@ namespace RecipeShelf.Tests.Common
             ingredient = await ingredientsCache.GetAsync("b");
             Assert.Equal("B1", ingredient.Description);
 
-            await Task.Delay(500);
+            await Task.Delay(750);
             ingredient = await ingredientsCache.GetAsync("b");
-            Assert.Equal("B2", ingredient.Description);            
+            Assert.Equal("B2", ingredient.Description);
         }
 
         public void Dispose()

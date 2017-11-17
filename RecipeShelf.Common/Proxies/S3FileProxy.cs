@@ -1,6 +1,5 @@
 ﻿using Amazon.S3.Model;
 using Amazon.S3.Transfer;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RecipeShelf.Common.Models;

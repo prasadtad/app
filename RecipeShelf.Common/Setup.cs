@@ -10,7 +10,6 @@ namespace RecipeShelf.Common
         {
             var commonSection = recipeshelfConfiguration.GetSection("Common");
             services.Configure<CommonSettings>(commonSection);
-            services.AddMemoryCache();
             services.AddSingleton<IngredientsCache>();
             return commonSection.GetValue<FileProxyTypes>("FileProxyType") == FileProxyTypes.Local ? services.AddSingleton<IFileProxy, LocalFileProxy>() :
                                                                     services.AddSingleton<IFileProxy, S3FileProxy>();
