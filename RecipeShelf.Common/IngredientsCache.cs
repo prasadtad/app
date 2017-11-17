@@ -21,8 +21,6 @@ namespace RecipeShelf.Common
 
         private DateTime _lastAccessed = DateTime.MinValue;
 
-        private const string INGREDIENTS_CACHE_KEY = "IngredientsCacheKey";
-
         public IngredientsCache(IFileProxy fileProxy, ILogger<IngredientsCache> logger, IOptions<CommonSettings> optionsAccessor)
         {
             _fileProxy = fileProxy;
